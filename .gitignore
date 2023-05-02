@@ -1,0 +1,43 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+terraform-provider-packetfabric
+.vscode/
+.idea/
+.terraform.lock.hcl
+tfplugindocs
+run.sh
+log.txt
+terraform.tfstate
+terraform.tfstate.backup
+*.backup
+#*main.tf
+.terraform.tfstate.lock.info
+# Test binary, built with `go test -c`
+*.test
+.DS_Store
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+/bin
+.terraform/
+/dist
+terraform.tfstate.d/
+.idea
+.infracost
+
+# Secret
+secret*.tfvars
+secret.json
+secret.sh
+env_vars_source.sh
+source_env_var.sh
+cloud_router_ip_address.txt
+customer_router_ip_address.txt
+cleanup.sh
