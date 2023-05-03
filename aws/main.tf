@@ -55,27 +55,9 @@ resource "aws_vpn_gateway" "vpn_gw" {
   provider        = aws
   count           = var.module_enabled ? 1 : 0
   amazon_side_asn = var.aws_cloud_router_connections.aws_asn1 != null ? var.aws_cloud_router_connections.aws_asn1 : 64512
+  vpc_id          = var.aws_cloud_router_connections.aws_vpc_id
   tags = {
     Name = var.name
-  }
-}
-resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  provider       = aws
-  count          = var.module_enabled ? 1 : 0
-  vpc_id         = var.aws_cloud_router_connections.aws_vpc_id
-  vpn_gateway_id = aws_vpn_gateway.vpn_gw[0].id
-}
-
-# To avoid the error conflicting pending workflow when deleting EC2 VPN Gateway Attachment during the destroy
-resource "null_resource" "vpn_attachment_delay" {
-  count = var.module_enabled ? 1 : 0
-  triggers = {
-    vpn_attachment_id = aws_vpn_gateway_attachment.vpn_attachment[0].id
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "sleep 300" # 5min
   }
 }
 
@@ -86,7 +68,7 @@ resource "aws_dx_gateway" "direct_connect_gw" {
   name            = var.name
   amazon_side_asn = var.aws_cloud_router_connections.aws_asn2 != null ? var.aws_cloud_router_connections.aws_asn1 : 64513
   depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
+    aws_vpn_gateway.vpn_gw[0]
   ]
 }
 
@@ -97,27 +79,10 @@ resource "aws_dx_gateway_association" "virtual_private_gw_to_direct_connect" {
   dx_gateway_id         = aws_dx_gateway.direct_connect_gw[0].id
   associated_gateway_id = aws_vpn_gateway.vpn_gw[0].id
   # allowed_prefixes managed via BGP prefixes in configured in packetfabric_cloud_router_connection_aws
-  depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
-  ]
   timeouts {
     create = "2h"
     delete = "2h"
   }
-}
-
-# Define the route table
-resource "aws_route_table" "route_table" {
-  count            = var.module_enabled ? 1 : 0
-  provider         = aws
-  vpc_id           = var.aws_cloud_router_connections.aws_vpc_id
-  propagating_vgws = ["${aws_vpn_gateway.vpn_gw[0].id}"]
-  tags = {
-    Name = var.name
-  }
-  depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
-  ]
 }
 
 # Get automatically the zone for the pop

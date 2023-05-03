@@ -82,9 +82,9 @@ export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-sett
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-standalone1"
-  labels  = ["terraform-cts", "nginx"]
+  labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
   google_cloud_router_connections = {
     google_project = "prefab-setting-357415"
@@ -106,9 +106,9 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-standalone2"
-  labels  = ["terraform-cts", "nginx"]
+  labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router
   asn      = 4556
   capacity = "10Gbps"
@@ -135,9 +135,9 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-redundant"
-  labels  = ["terraform-cts", "myservice"]
+  labels  = ["terraform", "prod"]
   # PacketFabric Cloud Router
   asn      = 4556
   capacity = "10Gbps"
