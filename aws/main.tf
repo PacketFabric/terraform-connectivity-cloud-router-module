@@ -21,27 +21,18 @@ resource "packetfabric_cloud_provider_credential_aws" "aws_creds" {
   # using env var PF_AWS_ACCESS_KEY_ID and PF_AWS_SECRET_ACCESS_KEY
 }
 
-# Get the subnetworks from the AWS VPC
-data "aws_subnets" "aws_subnets" {
+# Get the network prefix from the AWS VPC
+data "aws_vpc" "aws_vpc" {
   provider = aws
   count    = var.module_enabled ? 1 : 0
-  filter {
-    name   = "vpc-id"
-    values = [var.aws_cloud_router_connections.aws_vpc_id]
-  }
-}
-
-data "aws_subnet" "subnet_info" {
-  provider = aws
-  for_each = var.module_enabled ? toset(data.aws_subnets.aws_subnets[0].ids) : toset([])
-  id       = each.value
+  id       = var.aws_cloud_router_connections.aws_vpc_id
 }
 
 locals {
   # Get the prefixes of the subnets
   aws_in_prefixes = var.aws_cloud_router_connections != null ? {
-    for key, subnet in data.aws_subnet.subnet_info : key => {
-      prefix = subnet.cidr_block
+    "vpc_cidr" = {
+      prefix = data.aws_vpc.aws_vpc[0].cidr_block
     }
   } : {}
 }
@@ -61,7 +52,20 @@ resource "aws_vpn_gateway" "vpn_gw" {
   }
 }
 
-# AWS Direct Connect Gateway
+# To avoid the error conflicting pending workflow when deleting EC2 VPN Gateway Attachment during the destroy
+resource "null_resource" "delay" {
+  count = var.module_enabled ? 1 : 0
+
+  depends_on = [
+    aws_dx_gateway.direct_connect_gw[0]
+  ]
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sleep 120"
+  }
+}
+
 resource "aws_dx_gateway" "direct_connect_gw" {
   provider        = aws
   count           = var.module_enabled ? 1 : 0
@@ -130,12 +134,12 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
           length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.google_in_prefixes : prefix.prefix],
-            try([for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"], [])
+            var.aws_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
       # IN: Allowed Prefixes from Cloud
@@ -147,7 +151,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }
@@ -197,12 +201,12 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
           length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.google_in_prefixes : prefix.prefix],
-            var.google_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
+            var.aws_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
       # IN: Allowed Prefixes from Cloud
@@ -214,7 +218,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }

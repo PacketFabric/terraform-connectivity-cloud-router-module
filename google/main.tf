@@ -95,12 +95,12 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
           length(try(coalesce(var.aws_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
-            try([for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"], [])
+            var.google_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
       # IN: Allowed Prefixes from Cloud
@@ -112,7 +112,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }
@@ -149,12 +149,12 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
           length(try(coalesce(var.aws_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
-            try([for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"], [])
+            var.google_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
       # IN: Allowed Prefixes from Cloud
@@ -166,7 +166,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }
