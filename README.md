@@ -18,8 +18,7 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 
 | Ecosystem | Version |
 |-----------|---------|
-| [terraform](https://www.terraform.io) | ">= 1.1.0, < 1.3.0" |
-<!-- | [terraform](https://www.terraform.io) | ">= 1.3.0" | -->
+| [terraform](https://www.terraform.io) | ">= 1.3.0" |
 
 ### Terraform Providers
 
