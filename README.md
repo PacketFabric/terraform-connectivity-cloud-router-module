@@ -28,7 +28,6 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 | [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.5.0 |
 | [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 4.62.0 |
 | [Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest) | >= 4.61.0 |
-| [null](https://registry.terraform.io/providers/hashicorp/null/latest) | >= 3.2.1 |
 
 ### Before you begin
 
@@ -49,7 +48,7 @@ Ensure you have the following items available:
 - [AWS Account ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/console_account-alias.html)
 - [AWS Access and Secret Keys](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 - [Google Service Account](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
-- [Packet Fabric Billing Account](https://docs.packetfabric.com/api/examples/account_uuid/)
+- [PacketFabric Billing Account](https://docs.packetfabric.com/api/examples/account_uuid/)
 - [PacketFabric API key](https://docs.packetfabric.com/admin/my_account/keys/)
 
 ## Setup
@@ -82,21 +81,21 @@ export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-sett
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-standalone1"
-  labels  = ["terraform-cts", "nginx"]
+  labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
   google_cloud_router_connections = {
     google_project = "prefab-setting-357415"
     google_region  = "us-west1"
     google_network = "myvpc"
-    google_pop     = "SFO1"
+    google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
   }
   # PacketFabric Cloud Router Connection to AWS
   aws_cloud_router_connections = {
     aws_region = "us-east-1"
     aws_vpc_id = "vpc-bea401c4"
-    aws_pop    = "WDC1"
+    aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
   }
 }
 ```
@@ -106,9 +105,9 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-standalone2"
-  labels  = ["terraform-cts", "nginx"]
+  labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router
   asn      = 4556
   capacity = "10Gbps"
@@ -117,14 +116,14 @@ module "packetfabric" {
     google_project = "prefab-setting-357415"
     google_region  = "us-west1"
     google_network = "myvpc"
-    google_pop     = "SFO1"
+    google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
     google_speed   = "2Gbps"
   }
   # PacketFabric Cloud Router Connection to AWS
   aws_cloud_router_connections = {
     aws_region = "us-east-1"
     aws_vpc_id = "vpc-bea401c4"
-    aws_pop    = "WDC1"
+    aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
     aws_speed  = "2Gbps"
   }
 }
@@ -135,9 +134,9 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.1.0"
   name    = "demo-redundant"
-  labels  = ["terraform-cts", "myservice"]
+  labels  = ["terraform", "prod"]
   # PacketFabric Cloud Router
   asn      = 4556
   capacity = "10Gbps"
@@ -147,17 +146,13 @@ module "packetfabric" {
     google_region  = "us-west1"
     google_network = "default"
     google_asn     = 16550
-    google_pop     = "SFO1"
+    google_pop     = "SFO1" # https://packetfabric.com/locations/cloud-on-ramps
     google_speed   = "1Gbps"
     redundant      = true
-    bgp_prefixes = [ # optional additional prefixes in/out
+    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
       {
-        prefix = "172.16.0.0/16"
-        type   = "out" # Allowed Prefixes to Cloud
-      },
-      {
-        prefix = "10.0.0.0/8"
-        type   = "in" # Allowed Prefixes from Cloud
+        prefix = "172.16.1.0/24"
+        type   = "out" # Allowed Prefixes to Cloud (to Google)
       }
     ]
   }
@@ -167,17 +162,13 @@ module "packetfabric" {
     aws_vpc_id = "vpc-bea401c4"
     aws_asn1   = 64512
     aws_asn2   = 64513
-    aws_pop    = "WDC1"
+    aws_pop    = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
     aws_speed  = "2Gbps"
     redundant  = true
-    bgp_prefixes = [ # optional additional prefixes in/out
+    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
       {
-        prefix = "10.0.0.0/8"
-        type   = "out" # Allowed Prefixes from Cloud
-      },
-      {
-        prefix = "172.16.0.0/16"
-        type   = "in" # Allowed Prefixes to Cloud
+        prefix = "10.1.1.0/24"
+        type   = "out" # Allowed Prefixes to Cloud (to AWS)
       }
     ]
   }
@@ -189,7 +180,7 @@ module "packetfabric" {
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
 | name                      | Yes      | | The base name all Network services created in PacketFabric, Google and AWS |
-| labels                    | No       | terraform-cts | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
+| labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
 | capacity                  | No        | "10Gbps" | The capacity of the PacketFabric Cloud Router |
 | regions                   | No       | ["US", "UK"] | The list of regions for the PacketFabric Cloud Router |
@@ -203,6 +194,8 @@ module "packetfabric" {
 
 ### AWS
 
+**Note**: Note that the default Maximum Transmission Unit (MTU) is set to `1500` in both AWS and Google.
+
 #### Private VIF
 
 | Input Variable | Required | Default | Description |
@@ -211,11 +204,11 @@ module "packetfabric" {
 | aws_vpc_id | Yes | | The AWS VPC ID |
 | aws_asn1 | No | 64512 | The AWS ASN for the first connection |
 | aws_asn2 | No | 64513 | The AWS ASN for the second connection if redundant |
-| aws_pop | Yes | | The PacketFabric Point of Presence for the connection |
+| aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | aws_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |
-| bgp_prefixes | No | VPC network subnets | List of additional BGP prefix objects |
-| bgp_prefixes_match_type | No | olonger | The BGP prefixes match type exact or olonger for all the prefixes |
+| bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
+| bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
 **Note**: This module currently supports private VIFs only. If you require support for transit or public VIFs, please feel free to open [GitHub Issues](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues) and provide your suggestions or requests.
 
@@ -227,11 +220,11 @@ module "packetfabric" {
 | google_region | Yes | | The Google Cloud region |
 | google_network | Yes | | The Google Cloud VPC network name |
 | google_asn | No | 16550 | The Google Cloud ASN |
-| google_pop | Yes | | The PacketFabric Point of Presence for the connection |
+| google_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | google_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |
-| bgp_prefixes | No | VPC network subnets | List of additional BGP prefix objects |
-| bgp_prefixes_match_type | No | olonger | The BGP prefixes match type exact or olonger for all the prefixes |
+| bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
+| bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
 ### Output Variables
 

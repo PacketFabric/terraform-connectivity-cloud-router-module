@@ -6,7 +6,7 @@ variable "name" {
 variable "labels" {
   description = "The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections."
   type        = list(string)
-  default     = ["terraform-cts"]
+  default     = ["terraform"]
 }
 
 # PacketFabric Cloud Router

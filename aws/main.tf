@@ -21,27 +21,18 @@ resource "packetfabric_cloud_provider_credential_aws" "aws_creds" {
   # using env var PF_AWS_ACCESS_KEY_ID and PF_AWS_SECRET_ACCESS_KEY
 }
 
-# Get the subnetworks from the AWS VPC
-data "aws_subnets" "aws_subnets" {
+# Get the network prefix from the AWS VPC
+data "aws_vpc" "aws_vpc" {
   provider = aws
   count    = var.module_enabled ? 1 : 0
-  filter {
-    name   = "vpc-id"
-    values = [var.aws_cloud_router_connections.aws_vpc_id]
-  }
-}
-
-data "aws_subnet" "subnet_info" {
-  provider = aws
-  for_each = var.module_enabled ? toset(data.aws_subnets.aws_subnets[0].ids) : toset([])
-  id       = each.value
+  id       = var.aws_cloud_router_connections.aws_vpc_id
 }
 
 locals {
   # Get the prefixes of the subnets
   aws_in_prefixes = var.aws_cloud_router_connections != null ? {
-    for key, subnet in data.aws_subnet.subnet_info : key => {
-      prefix = subnet.cidr_block
+    "vpc_cidr" = {
+      prefix = data.aws_vpc.aws_vpc[0].cidr_block
     }
   } : {}
 }
@@ -55,39 +46,29 @@ resource "aws_vpn_gateway" "vpn_gw" {
   provider        = aws
   count           = var.module_enabled ? 1 : 0
   amazon_side_asn = var.aws_cloud_router_connections.aws_asn1 != null ? var.aws_cloud_router_connections.aws_asn1 : 64512
+  vpc_id          = var.aws_cloud_router_connections.aws_vpc_id
   tags = {
     Name = var.name
   }
 }
-resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  provider       = aws
-  count          = var.module_enabled ? 1 : 0
-  vpc_id         = var.aws_cloud_router_connections.aws_vpc_id
-  vpn_gateway_id = aws_vpn_gateway.vpn_gw[0].id
+
+# To avoid the error conflicting pending workflow when deleting aws_vpn_gateway during the destroy
+resource "time_sleep" "delay" {
+  count            = var.module_enabled ? 1 : 0
+  create_duration  = "0s"
+  destroy_duration = "2m"
+
+  depends_on = [
+    aws_vpn_gateway.vpn_gw[0],
+    aws_dx_gateway.direct_connect_gw[0]
+  ]
 }
 
-# To avoid the error conflicting pending workflow when deleting EC2 VPN Gateway Attachment during the destroy
-resource "null_resource" "vpn_attachment_delay" {
-  count = var.module_enabled ? 1 : 0
-  triggers = {
-    vpn_attachment_id = aws_vpn_gateway_attachment.vpn_attachment[0].id
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "sleep 300" # 5min
-  }
-}
-
-# AWS Direct Connect Gateway
 resource "aws_dx_gateway" "direct_connect_gw" {
   provider        = aws
   count           = var.module_enabled ? 1 : 0
   name            = var.name
-  amazon_side_asn = var.aws_cloud_router_connections.aws_asn2 != null ? var.aws_cloud_router_connections.aws_asn1 : 64513
-  depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
-  ]
+  amazon_side_asn = var.aws_cloud_router_connections.aws_asn2 != null ? var.aws_cloud_router_connections.aws_asn2 : 64513
 }
 
 # Associate Virtual Private GW to Direct Connect GW
@@ -97,27 +78,11 @@ resource "aws_dx_gateway_association" "virtual_private_gw_to_direct_connect" {
   dx_gateway_id         = aws_dx_gateway.direct_connect_gw[0].id
   associated_gateway_id = aws_vpn_gateway.vpn_gw[0].id
   # allowed_prefixes managed via BGP prefixes in configured in packetfabric_cloud_router_connection_aws
-  depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
-  ]
   timeouts {
     create = "2h"
     delete = "2h"
   }
-}
-
-# Define the route table
-resource "aws_route_table" "route_table" {
-  count            = var.module_enabled ? 1 : 0
-  provider         = aws
-  vpc_id           = var.aws_cloud_router_connections.aws_vpc_id
-  propagating_vgws = ["${aws_vpn_gateway.vpn_gw[0].id}"]
-  tags = {
-    Name = var.name
-  }
-  depends_on = [
-    aws_vpn_gateway_attachment.vpn_attachment[0]
-  ]
+  depends_on = [time_sleep.delay[0]]
 }
 
 # Get automatically the zone for the pop
@@ -158,22 +123,22 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
       # # Primary - Set AS Prepend to 1 and Local Pref to 10 to prioritized traffic to the primary
       # as_prepend       = 1
       # local_preference = 10
-      # OUT: Allowed Prefixes to Cloud
+      # OUT: Allowed Prefixes to Cloud (to AWS)
       dynamic "prefixes" {
         for_each = (
           length(var.google_in_prefixes) == 0 &&
           length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.google_in_prefixes : prefix.prefix],
-            try([for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"], [])
+            var.aws_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
-      # IN: Allowed Prefixes from Cloud
+      # IN: Allowed Prefixes from Cloud (from AWS)
       dynamic "prefixes" {
         for_each = toset(concat(
           [for prefix in local.aws_in_prefixes : prefix.prefix],
@@ -182,7 +147,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }
@@ -225,22 +190,22 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
       # # Secondary - Set AS Prepend to 5 and Local Pref to 1 to prioritized traffic to the primary
       # as_prepend       = 5
       # local_preference = 1
-      # OUT: Allowed Prefixes to Cloud
+      # OUT: Allowed Prefixes to Cloud (to AWS)
       dynamic "prefixes" {
         for_each = (
           length(var.google_in_prefixes) == 0 &&
           length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.google_in_prefixes : prefix.prefix],
-            var.google_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
+            var.aws_cloud_router_connections.bgp_prefixes != null ? [for prefix in var.aws_cloud_router_connections.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
         ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
-      # IN: Allowed Prefixes from Cloud
+      # IN: Allowed Prefixes from Cloud (from AWS)
       dynamic "prefixes" {
         for_each = toset(concat(
           [for prefix in local.aws_in_prefixes : prefix.prefix],
@@ -249,7 +214,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "orlonger"
+          match_type = var.aws_cloud_router_connections.bgp_prefixes_match_type != null ? var.aws_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
     }
