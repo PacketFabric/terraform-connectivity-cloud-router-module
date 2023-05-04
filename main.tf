@@ -13,9 +13,7 @@ terraform {
       version = ">= 4.61.0"
     }
   }
-  # required_version = ">= 1.3.0"
-  required_version = ">= 1.1.0, < 1.3.0"
-  experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
+  required_version = ">= 1.3.0"
 }
 
 # PacketFabric Cloud Router
