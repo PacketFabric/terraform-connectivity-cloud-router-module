@@ -18,7 +18,6 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 
 | Ecosystem | Version |
 |-----------|---------|
-<!-- | [terraform](https://www.terraform.io) | ">= 1.1.0, < 1.3.0" | -->
 | [terraform](https://www.terraform.io) | ">= 1.3.0" |
 
 ### Terraform Providers
@@ -81,7 +80,7 @@ export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-sett
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.1.0"
+  version = "0.2.0"
   name    = "demo-standalone1"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
@@ -105,7 +104,7 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.1.0"
+  version = "0.2.0"
   name    = "demo-standalone2"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router
@@ -134,7 +133,7 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.1.0"
+  version = "0.2.0"
   name    = "demo-redundant"
   labels  = ["terraform", "prod"]
   # PacketFabric Cloud Router
