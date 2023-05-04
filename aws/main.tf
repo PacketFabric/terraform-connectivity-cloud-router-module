@@ -9,9 +9,9 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = var.aws_cloud_router_connections != null ? var.aws_cloud_router_connections.aws_region : "us-east-1"
-}
+# provider "aws" {
+#   region = var.aws_cloud_router_connections != null ? var.aws_cloud_router_connections.aws_region : "us-east-1"
+# }
 
 # Import AWS Credentials to PacketFabric to provision the cloud side of the connection
 resource "packetfabric_cloud_provider_credential_aws" "aws_creds" {
