@@ -59,8 +59,10 @@ resource "google_compute_router" "google_router" {
   }
   lifecycle {
     # advertised_ip_ranges managed via BGP prefixes in configured in packetfabric_cloud_router_connection_google
+    # asn could be change to a private ASN by PacketFabric in case of multiple google connection in the same cloud router
     ignore_changes = [
-      bgp[0].advertised_ip_ranges
+      bgp[0].advertised_ip_ranges,
+      bgp[0].asn
     ]
   }
 }
@@ -87,8 +89,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
       # # Primary - Set AS Prepend to 1 and Local Pref to 10 to prioritized traffic to the primary
       # as_prepend       = 1
       # local_preference = 10
-      remote_asn = var.google_cloud_router_connections.google_asn # != null ?  var.google_cloud_router_connections.google_asn : 16550
-      # OUT: Allowed Prefixes to Cloud
+      remote_asn = var.google_cloud_router_connections.google_asn != null ? var.google_cloud_router_connections.google_asn : 16550
+      # OUT: Allowed Prefixes to Cloud (to Google)
       dynamic "prefixes" {
         for_each = (
           length(var.aws_in_prefixes) == 0 &&
@@ -103,7 +105,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
           match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
-      # IN: Allowed Prefixes from Cloud
+      # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
         for_each = toset(concat(
           [for prefix in local.google_in_prefixes : prefix.prefix],
@@ -142,7 +144,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
       # as_prepend       = 5
       # local_preference = 1
       remote_asn = var.google_cloud_router_connections.google_asn != null ? var.google_cloud_router_connections.google_asn : 16550
-      # OUT: Allowed Prefixes to Cloud
+      # OUT: Allowed Prefixes to Cloud (to Google)
       dynamic "prefixes" {
         for_each = (
           length(var.aws_in_prefixes) == 0 &&
@@ -157,7 +159,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
           match_type = var.google_cloud_router_connections.bgp_prefixes_match_type != null ? var.google_cloud_router_connections.bgp_prefixes_match_type : "exact"
         }
       }
-      # IN: Allowed Prefixes from Cloud
+      # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
         for_each = toset(concat(
           [for prefix in local.google_in_prefixes : prefix.prefix],

@@ -28,7 +28,6 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 | [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.5.0 |
 | [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 4.62.0 |
 | [Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest) | >= 4.61.0 |
-| [null](https://registry.terraform.io/providers/hashicorp/null/latest) | >= 3.2.1 |
 
 ### Before you begin
 
@@ -150,7 +149,7 @@ module "packetfabric" {
     google_pop     = "SFO1" # https://packetfabric.com/locations/cloud-on-ramps
     google_speed   = "1Gbps"
     redundant      = true
-    bgp_prefixes = [ # optional additional prefixes out to restrict the traffic to a specific subnet
+    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
       {
         prefix = "172.16.1.0/24"
         type   = "out" # Allowed Prefixes to Cloud (to Google)
@@ -166,7 +165,7 @@ module "packetfabric" {
     aws_pop    = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
     aws_speed  = "2Gbps"
     redundant  = true
-    bgp_prefixes = [ # optional additional prefixes out to restrict the traffic to a specific subnet
+    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
       {
         prefix = "10.1.1.0/24"
         type   = "out" # Allowed Prefixes to Cloud (to AWS)
@@ -181,7 +180,7 @@ module "packetfabric" {
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
 | name                      | Yes      | | The base name all Network services created in PacketFabric, Google and AWS |
-| labels                    | No       | terraform-cts | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
+| labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
 | capacity                  | No        | "10Gbps" | The capacity of the PacketFabric Cloud Router |
 | regions                   | No       | ["US", "UK"] | The list of regions for the PacketFabric Cloud Router |
@@ -208,7 +207,7 @@ module "packetfabric" {
 | aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | aws_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |
-| bgp_prefixes | No | VPC network subnets | List of additional BGP prefix objects |
+| bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
 | bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
 **Note**: This module currently supports private VIFs only. If you require support for transit or public VIFs, please feel free to open [GitHub Issues](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues) and provide your suggestions or requests.
@@ -224,7 +223,7 @@ module "packetfabric" {
 | google_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | google_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |
-| bgp_prefixes | No | VPC network subnets | List of additional BGP prefix objects |
+| bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
 | bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
 ### Output Variables
