@@ -182,7 +182,7 @@ module "packetfabric" {
 | labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
 | capacity                  | No        | "10Gbps" | The capacity of the PacketFabric Cloud Router |
-| regions                   | No       | ["US", "UK"] | The list of regions for the PacketFabric Cloud Router |
+| regions                   | No       | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
 | aws_cloud_router_connections | Yes     | | A list of objects representing the AWS Cloud Router Connections (Private VIF) |
 | google_cloud_router_connections | Yes  | | A list of objects representing the Google Cloud Router Connections |
 <!-- | azure_cloud_router_connections | Yes  | | A list of objects representing the Azure Cloud Router Connections | -->
