@@ -163,8 +163,8 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
 }
 
 resource "time_sleep" "delay1" {
-  count      = var.module_enabled ? 1 : 0
-  depends_on = [packetfabric_cloud_router_connection_aws.crc_aws_primary[0]]
+  count           = var.module_enabled ? 1 : 0
+  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_primary[0]]
   create_duration = "30s"
 }
 
@@ -244,8 +244,8 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
 }
 
 resource "time_sleep" "delay2" {
-  count      = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  depends_on = [packetfabric_cloud_router_connection_aws.crc_aws_secondary[0]]
+  count           = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_secondary[0]]
   create_duration = "30s"
 }
 

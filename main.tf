@@ -25,9 +25,16 @@ resource "packetfabric_cloud_router" "cr" {
   regions  = var.regions
   labels   = var.labels
 }
+
+resource "time_sleep" "delay" {
+  depends_on      = [packetfabric_cloud_router.cr]
+  create_duration = "30s"
+}
+
 data "packetfabric_billing" "billing_cr" {
   provider   = packetfabric
   circuit_id = packetfabric_cloud_router.cr.id
+  depends_on = [time_sleep.delay]
 }
 
 module "aws" {
@@ -54,15 +61,15 @@ locals {
   cr_monthly_prices = flatten([
     for billing in data.packetfabric_billing.billing_cr.billings : [
       for billable in billing.billables :
-        billable.price * (billable.price_type == "monthly" ? 1 : 0)
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
     ]
   ])
-  cr_monthly_price = sum(local.cr_monthly_prices)
+  cr_monthly_price = try(sum(local.cr_monthly_prices), 0)
 
   aws_crc_primary_monthly_prices = try(flatten([
     for billing in module.aws.aws_crc_primary_billing : [
       for billable in billing.billables :
-        billable.price * (billable.price_type == "monthly" ? 1 : 0)
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
     ]
   ]), [])
   aws_crc_primary_monthly_price = try(sum(local.aws_crc_primary_monthly_prices), 0)
@@ -70,7 +77,7 @@ locals {
   aws_crc_secondary_monthly_prices = try(flatten([
     for billing in module.aws.aws_crc_secondary_billing : [
       for billable in billing.billables :
-        billable.price * (billable.price_type == "monthly" ? 1 : 0)
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
     ]
   ]), [])
   aws_crc_secondary_monthly_price = try(sum(local.aws_crc_secondary_monthly_prices), 0)
@@ -78,7 +85,7 @@ locals {
   google_crc_primary_monthly_prices = try(flatten([
     for billing in module.google.google_crc_primary_billing : [
       for billable in billing.billables :
-        billable.price * (billable.price_type == "monthly" ? 1 : 0)
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
     ]
   ]), [])
   google_crc_primary_monthly_price = try(sum(local.google_crc_primary_monthly_prices), 0)
@@ -86,7 +93,7 @@ locals {
   google_crc_secondary_monthly_prices = try(flatten([
     for billing in module.google.google_crc_secondary_billing : [
       for billable in billing.billables :
-        billable.price * (billable.price_type == "monthly" ? 1 : 0)
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
     ]
   ]), [])
   google_crc_secondary_monthly_price = try(sum(local.google_crc_secondary_monthly_prices), 0)

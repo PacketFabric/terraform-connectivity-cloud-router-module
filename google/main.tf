@@ -122,8 +122,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
 }
 
 resource "time_sleep" "delay1" {
-  count      = var.module_enabled ? 1 : 0
-  depends_on = [packetfabric_cloud_router_connection_google.crc_google_primary[0]]
+  count           = var.module_enabled ? 1 : 0
+  depends_on      = [packetfabric_cloud_router_connection_google.crc_google_primary[0]]
   create_duration = "30s"
 }
 
@@ -131,7 +131,7 @@ data "packetfabric_billing" "crc_google_primary" {
   provider   = packetfabric
   count      = var.module_enabled ? 1 : 0
   circuit_id = packetfabric_cloud_router_connection_google.crc_google_primary[0].id
-   depends_on = [time_sleep.delay1]
+  depends_on = [time_sleep.delay1]
 }
 
 # Create the redundant connection if redundant set to true
@@ -193,8 +193,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
 }
 
 resource "time_sleep" "delay2" {
-  count      = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  depends_on = [packetfabric_cloud_router_connection_google.crc_google_secondary[0]]
+  count           = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  depends_on      = [packetfabric_cloud_router_connection_google.crc_google_secondary[0]]
   create_duration = "30s"
 }
 
