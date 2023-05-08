@@ -162,6 +162,20 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
   ]
 }
 
+# Wait 30s before getting the billing information
+resource "time_sleep" "delay1" {
+  count           = var.module_enabled ? 1 : 0
+  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_primary[0]]
+  create_duration = "30s"
+}
+
+data "packetfabric_billing" "crc_aws_primary" {
+  provider   = packetfabric
+  count      = var.module_enabled ? 1 : 0
+  circuit_id = packetfabric_cloud_router_connection_aws.crc_aws_primary[0].id
+  depends_on = [time_sleep.delay1]
+}
+
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   provider    = packetfabric
@@ -230,6 +244,20 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   ]
 }
 
+# Wait for the secondary connection to be created before getting billing info
+resource "time_sleep" "delay2" {
+  count           = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_secondary[0]]
+  create_duration = "30s"
+}
+
+data "packetfabric_billing" "crc_aws_secondary" {
+  provider   = packetfabric
+  count      = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  circuit_id = packetfabric_cloud_router_connection_aws.crc_aws_secondary[0].id
+  depends_on = [time_sleep.delay2]
+}
+
 output "cloud_router_connection_aws_primary" {
   value       = packetfabric_cloud_router_connection_aws.crc_aws_primary
   description = "Primary PacketFabric AWS Cloud Router Connection"
@@ -240,3 +268,12 @@ output "cloud_router_connection_aws_secondary" {
   description = "Secondary PacketFabric AWS Cloud Router Connection (if redundant is true)"
 }
 
+output "aws_crc_primary_billing" {
+  description = "Billing information for the primary AWS Cloud Router Connection"
+  value       = try(data.packetfabric_billing.crc_aws_primary[0].billings, [])
+}
+
+output "aws_crc_secondary_billing" {
+  description = "Billing information for the secondary AWS Cloud Router Connection (if created)"
+  value       = try(data.packetfabric_billing.crc_aws_secondary[0].billings, [])
+}

@@ -1,3 +1,10 @@
+## 0.2.1  (May 8, 2023)
+
+IMPROVEMENTS/ENHANCEMENTS:
+
+* Add Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections (#4)
+* Updated the default Cloud Router Region to US only (#4)
+
 ## 0.2.0  (May 5, 2023)
 
 IMPROVEMENTS/ENHANCEMENTS:

@@ -72,8 +72,9 @@ export AWS_SECRET_ACCESS_KEY="secret"
 export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-setting-1234", "private_key_id": "1234", "private_key": "-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----\n", "client_email": "demoapi@demo-setting-1234.iam.gserviceaccount.com", "client_id": "102640829015169383380", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs", "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/demoapi%40demo-setting-1234.iam.gserviceaccount.com" }'
 ```
 
-## Example
+**Note**: To convert a pretty-printed JSON into a single line JSON string: `jq -c '.' google_credentials.json`.
 
+## Example
 
 ### Example Cloud Router AWS/Google usage with single connections (1Gbps)
 
@@ -96,6 +97,9 @@ module "packetfabric" {
     aws_vpc_id = "vpc-bea401c4"
     aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
   }
+}
+output "total_price_monthly_recurring_cost" {
+  value = module.packetfabric.total_price_mrc
 }
 ```
 
@@ -182,18 +186,21 @@ module "packetfabric" {
 | labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
 | capacity                  | No        | "10Gbps" | The capacity of the PacketFabric Cloud Router |
-| regions                   | No       | ["US", "UK"] | The list of regions for the PacketFabric Cloud Router |
+| regions                   | No       | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
 | aws_cloud_router_connections | Yes     | | A list of objects representing the AWS Cloud Router Connections (Private VIF) |
 | google_cloud_router_connections | Yes  | | A list of objects representing the Google Cloud Router Connections |
 <!-- | azure_cloud_router_connections | Yes  | | A list of objects representing the Azure Cloud Router Connections | -->
 
-**Note**: Only 1 object for `google_cloud_router_connections` and `aws_cloud_router_connections` can be defined.
+**Note**: 
+
+- Only 1 object for `google_cloud_router_connections` and `aws_cloud_router_connections` can be defined.
+- The default Maximum Transmission Unit (MTU) is set to `1500` in both AWS and Google.
+- By default, the BGP prefixes for AWS and Google are configured to use the VPC network as the allowed prefix from/to each cloud.
+- To explore pricing options, please visit the [PacketFabric pricing tool](https://packetfabric.com/pricing)
 
 :warning: **Please be aware that creating AWS Cloud Router connections can take up to 30 minutes due to the gateway association operation.**
 
 ### AWS
-
-**Note**: Note that the default Maximum Transmission Unit (MTU) is set to `1500` in both AWS and Google.
 
 #### Private VIF
 
@@ -234,6 +241,7 @@ module "packetfabric" {
 | cloud_router_connection_aws_secondary | Secondary PacketFabric AWS Cloud Router Connection (Private VIF) (if redundant is true) |
 | cloud_router_connection_google_primary | Primary PacketFabric Google Cloud Router Connection |
 | cloud_router_connection_google_secondary | Secondary PacketFabric Google Cloud Router Connection (if redundant is true) |
+| total_price_mrc | Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections |
 
 ## Support Information
 
