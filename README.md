@@ -81,7 +81,7 @@ export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-sett
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.2.1"
   name    = "demo-standalone1"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
@@ -108,7 +108,7 @@ output "total_price_monthly_recurring_cost" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.2.1"
   name    = "demo-standalone2"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router
@@ -137,7 +137,7 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.2.0"
+  version = "0.2.1"
   name    = "demo-redundant"
   labels  = ["terraform", "prod"]
   # PacketFabric Cloud Router
