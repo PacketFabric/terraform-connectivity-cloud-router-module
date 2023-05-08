@@ -26,6 +26,7 @@ resource "packetfabric_cloud_router" "cr" {
   labels   = var.labels
 }
 
+# Adding a short delay to allow the Cloud Router to be created before we query for billing
 resource "time_sleep" "delay" {
   depends_on      = [packetfabric_cloud_router.cr]
   create_duration = "30s"

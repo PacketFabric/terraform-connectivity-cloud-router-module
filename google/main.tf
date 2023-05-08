@@ -121,6 +121,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   }
 }
 
+# Wait 30s before getting the billing information
 resource "time_sleep" "delay1" {
   count           = var.module_enabled ? 1 : 0
   depends_on      = [packetfabric_cloud_router_connection_google.crc_google_primary[0]]
@@ -192,6 +193,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   ]
 }
 
+# Wait for the secondary connection to be created before checking billing
 resource "time_sleep" "delay2" {
   count           = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
   depends_on      = [packetfabric_cloud_router_connection_google.crc_google_secondary[0]]

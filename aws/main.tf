@@ -162,6 +162,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
   ]
 }
 
+# Wait 30s before getting the billing information
 resource "time_sleep" "delay1" {
   count           = var.module_enabled ? 1 : 0
   depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_primary[0]]
@@ -243,6 +244,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   ]
 }
 
+# Wait for the secondary connection to be created before getting billing info
 resource "time_sleep" "delay2" {
   count           = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
   depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_secondary[0]]

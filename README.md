@@ -98,8 +98,8 @@ module "packetfabric" {
     aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
   }
 }
-output "total_price_mrc" {
-  value       = module.packetfabric.total_price_mrc
+output "total_price_monthly_recurring_cost" {
+  value = module.packetfabric.total_price_mrc
 }
 ```
 
