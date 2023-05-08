@@ -121,6 +121,19 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   }
 }
 
+resource "time_sleep" "delay1" {
+  count      = var.module_enabled ? 1 : 0
+  depends_on = [packetfabric_cloud_router_connection_google.crc_google_primary[0]]
+  create_duration = "30s"
+}
+
+data "packetfabric_billing" "crc_google_primary" {
+  provider   = packetfabric
+  count      = var.module_enabled ? 1 : 0
+  circuit_id = packetfabric_cloud_router_connection_google.crc_google_primary[0].id
+   depends_on = [time_sleep.delay1]
+}
+
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   provider    = packetfabric
@@ -179,10 +192,33 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   ]
 }
 
+resource "time_sleep" "delay2" {
+  count      = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  depends_on = [packetfabric_cloud_router_connection_google.crc_google_secondary[0]]
+  create_duration = "30s"
+}
+
+data "packetfabric_billing" "crc_google_secondary" {
+  provider   = packetfabric
+  count      = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
+  circuit_id = packetfabric_cloud_router_connection_google.crc_google_secondary[0].id
+  depends_on = [time_sleep.delay2]
+}
+
 output "cloud_router_connection_google_primary" {
   value = packetfabric_cloud_router_connection_google.crc_google_primary
 }
 
 output "cloud_router_connection_google_secondary" {
   value = packetfabric_cloud_router_connection_google.crc_google_secondary
+}
+
+output "google_crc_primary_billing" {
+  description = "Billing information for the primary Google Cloud Router Connection"
+  value       = try(data.packetfabric_billing.crc_google_primary[0].billings, [])
+}
+
+output "google_crc_secondary_billing" {
+  description = "Billing information for the secondary Google Cloud Router Connection (if created)"
+  value       = try(data.packetfabric_billing.crc_google_secondary[0].billings, [])
 }
