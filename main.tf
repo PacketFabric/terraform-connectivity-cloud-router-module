@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/google"
       version = ">= 4.61.0"
     }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.56.0"
+    }
   }
   required_version = ">= 1.3.0"
 }
@@ -44,6 +48,7 @@ module "aws" {
   name                         = var.name
   labels                       = var.labels
   google_in_prefixes           = try(module.google.google_in_prefixes, [])
+  azure_in_prefixes            = try(module.azure.azure_in_prefixes, [])
   cr_id                        = packetfabric_cloud_router.cr.id
   aws_cloud_router_connections = var.aws_cloud_router_connections
 }
@@ -54,8 +59,21 @@ module "google" {
   name                            = var.name
   labels                          = var.labels
   aws_in_prefixes                 = try(module.aws.aws_in_prefixes, [])
+  azure_in_prefixes               = try(module.azure.azure_in_prefixes, [])
   cr_id                           = packetfabric_cloud_router.cr.id
   google_cloud_router_connections = var.google_cloud_router_connections
+}
+
+module "azure" {
+  source                         = "./azure"
+  module_enabled                 = var.azure_cloud_router_connections != null
+  name                           = var.name
+  labels                         = var.labels
+  aws_in_prefixes                = try(module.aws.aws_in_prefixes, [])
+  google_in_prefixes             = try(module.google.google_in_prefixes, [])
+  cr_id                          = packetfabric_cloud_router.cr.id
+  cr_asn                         = var.asn
+  azure_cloud_router_connections = var.azure_cloud_router_connections
 }
 
 locals {
@@ -99,5 +117,21 @@ locals {
   ]), [])
   google_crc_secondary_monthly_price = try(sum(local.google_crc_secondary_monthly_prices), 0)
 
-  total_price_mrc = local.cr_monthly_price + local.aws_crc_primary_monthly_price + local.aws_crc_secondary_monthly_price + local.google_crc_primary_monthly_price + local.google_crc_secondary_monthly_price
+  azure_crc_primary_monthly_prices = try(flatten([
+    for billing in module.azure.azure_crc_primary_billing : [
+      for billable in billing.billables :
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
+    ]
+  ]), [])
+  azure_crc_primary_monthly_price = try(sum(local.azure_crc_primary_monthly_prices), 0)
+
+  azure_crc_secondary_monthly_prices = try(flatten([
+    for billing in module.azure.azure_crc_secondary_billing : [
+      for billable in billing.billables :
+      billable.price * (billable.price_type == "monthly" ? 1 : 0)
+    ]
+  ]), [])
+  azure_crc_secondary_monthly_price = try(sum(local.azure_crc_secondary_monthly_prices), 0)
+
+  total_price_mrc = local.cr_monthly_price + local.aws_crc_primary_monthly_price + local.aws_crc_secondary_monthly_price + local.google_crc_primary_monthly_price + local.google_crc_secondary_monthly_price + local.azure_crc_primary_monthly_price + local.azure_crc_secondary_monthly_price
 }

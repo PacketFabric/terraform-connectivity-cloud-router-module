@@ -27,6 +27,7 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 | [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.5.0 |
 | [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 4.62.0 |
 | [Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest) | >= 4.61.0 |
+| [Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest) | >= 3.56.0 |
 
 ### Before you begin
 
@@ -34,6 +35,7 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 - Don't have a PacketFabric Account? [Get Started](https://docs.packetfabric.com/intro/)
 - Don't have an AWS Account? [Get Started](https://aws.amazon.com/free/)
 - Don't have a Google Account? [Get Started](https://cloud.google.com/free)
+- Don't have an Azure Account? [Get Started](https://azure.microsoft.com/en-us/free/)
 
 ### Prerequisites
 
@@ -47,16 +49,27 @@ Ensure you have the following items available:
 - [AWS Account ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/console_account-alias.html)
 - [AWS Access and Secret Keys](https://docs.aws.amazon.com/general/latest/gr/aws-security-credentials.html)
 - [Google Service Account](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances)
+- [Microsoft Azure Service Principal](https://docs.microsoft.com/en-us/azure/developer/terraform/authenticate-to-azure?tabs=bash)
 - [PacketFabric Billing Account](https://docs.packetfabric.com/api/examples/account_uuid/)
 - [PacketFabric API key](https://docs.packetfabric.com/admin/my_account/keys/)
+
+
+For Azure, enable AzureExpressRoute in the Azure Subscription
+```sh
+az feature register --namespace Microsoft.Network --name AllowExpressRoutePorts
+az provider register -n Microsoft.Network
+```
+
+:warning: **Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).**
 
 ## Setup
 
 1. Make sure you enabled Compute Engine API in Google Cloud
 2. Create Google Service Account along wih the Private Key
 3. Create an AWS Access Key and Secret Access Key
+4. Create an Microsoft Azure Service Principal
 4. Create a PacketFabric API Key
-5. Gather necessary information such as AWS account ID, Google and AWS regions, VPC name (Google), VPC ID (AWS), Google Project ID and [PacketFabric Cloud On-Ramps](https://packetfabric.com/locations/cloud-on-ramps) (PoP)
+5. Gather necessary information such as AWS account ID, Google and AWS regions, VPC name (Google), VPC ID (AWS), VNet (Azure), Resource Group (Azure), Google Project ID and [PacketFabric Cloud On-Ramps](https://packetfabric.com/locations/cloud-on-ramps) (PoP)
 
 Environement variables needed:
 
@@ -70,13 +83,24 @@ export AWS_ACCESS_KEY_ID="ABCDEFGH"
 export AWS_SECRET_ACCESS_KEY="secret"
 ### Google
 export GOOGLE_CREDENTIALS='{ "type": "service_account", "project_id": "demo-setting-1234", "private_key_id": "1234", "private_key": "-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----\n", "client_email": "demoapi@demo-setting-1234.iam.gserviceaccount.com", "client_id": "102640829015169383380", "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token", "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs", "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/demoapi%40demo-setting-1234.iam.gserviceaccount.com" }'
+### Azure
+export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
+export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
+export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
+```
+
+Example with Windows PowerShell:
+```powershell
+PS C:\> $Env:PF_TOKEN="secret"
+PS C:\> $Env:PF_ACCOUNT_ID="123456789"
 ```
 
 **Note**: To convert a pretty-printed JSON into a single line JSON string: `jq -c '.' google_credentials.json`.
 
 ## Example
 
-### Example Cloud Router AWS/Google usage with single connections (1Gbps)
+### Example Cloud Router AWS/Google/Azure usage with single connections (1Gbps)
 
 ```hcl
 module "packetfabric" {
@@ -96,6 +120,14 @@ module "packetfabric" {
     aws_region = "us-east-1"
     aws_vpc_id = "vpc-bea401c4"
     aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
+  }
+  # PacketFabric Cloud Router Connection to Azure
+  azure_cloud_router_connections = {
+    azure_region          = "North Central US"
+    azure_resource_group  = "MyResourceGroup"
+    azure_vnet            = "MyVnet"
+    azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
+    azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
   }
 }
 output "total_price_monthly_recurring_cost" {
@@ -185,20 +217,20 @@ module "packetfabric" {
 | name                      | Yes      | | The base name all Network services created in PacketFabric, Google and AWS |
 | labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
-| capacity                  | No        | "10Gbps" | The capacity of the PacketFabric Cloud Router |
+| capacity                  | No        | ">100Gbps" | The capacity of the PacketFabric Cloud Router |
 | regions                   | No       | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
 | aws_cloud_router_connections | Yes     | | A list of objects representing the AWS Cloud Router Connections (Private VIF) |
 | google_cloud_router_connections | Yes  | | A list of objects representing the Google Cloud Router Connections |
-<!-- | azure_cloud_router_connections | Yes  | | A list of objects representing the Azure Cloud Router Connections | -->
+| azure_cloud_router_connections | Yes  | | A list of objects representing the Azure Cloud Router Connections |
 
 **Note**: 
 
-- Only 1 object for `google_cloud_router_connections` and `aws_cloud_router_connections` can be defined.
+- Only 1 object for `aws_cloud_router_connections`, `google_cloud_router_connections` and `azure_cloud_router_connections` can be defined.
 - The default Maximum Transmission Unit (MTU) is set to `1500` in both AWS and Google.
 - By default, the BGP prefixes for AWS and Google are configured to use the VPC network as the allowed prefix from/to each cloud.
 - To explore pricing options, please visit the [PacketFabric pricing tool](https://packetfabric.com/pricing)
 
-:warning: **Please be aware that creating AWS Cloud Router connections can take up to 30 minutes due to the gateway association operation.**
+:warning: **Please be aware that creating AWS or Azure Cloud Router connections can take up to 30-60 minutes due to the gateway association operation on the CSP side.**
 
 ### AWS
 
@@ -207,7 +239,7 @@ module "packetfabric" {
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
 | aws_region | Yes | | The AWS region |
-| aws_vpc_id | Yes | | The AWS VPC ID |
+| aws_vpc_id | Yes | | The AWS VPC ID (makes sure your VPC is not already attached to an existing Virtual Private Gateway)|
 | aws_asn1 | No | 64512 | The AWS ASN for the first connection |
 | aws_asn2 | No | 64513 | The AWS ASN for the second connection if redundant |
 | aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
@@ -232,6 +264,28 @@ module "packetfabric" {
 | bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
 | bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
+### Azure
+
+#### Private Peering
+
+| Input Variable | Required | Default | Description |
+|----------------|----------|----------|------------|
+| azure_resource_group | Yes | | The Azure Resource group |
+| azure_region | Yes | | The Azure Cloud region |
+| azure_vnet | Yes | | The Azure Cloud VNet name |
+| azure_asn |  | 12076 | The Azure Cloud ASN (cannot be changed) |
+| azure_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection is defined on the Azure side [Search for PacketFabric](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers) |
+| azure_speed | No | 1Gbps | The connection speed |
+| redundant | No | false | Create a redundant connection if set to true |
+| skip_gateway | No | false | Skip virtual network gateway creation if set to true. Follow [instructions](https://docs.packetfabric.com/cr/bgp/bgp_azure/) to create the gateway manually |
+| azure_subscription_id | No |  | Only required if skip_gateway set to false |
+| bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
+| bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
+
+:warning: **Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).**
+
+**Note**: The BGP session for Azure is using the following default prefixes: `169.254.247.40/30` (primary) and `169.254.247.44/30` (secondary). Also Azure SKU Tier is set to `Standard` and SKU Family to `MeterdData` in the ExpressRoute. If you like to be able to customize those, please feel free to open a [GitHub Issue](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues).
+
 ### Output Variables
 
 | Name | Description |
@@ -241,6 +295,8 @@ module "packetfabric" {
 | cloud_router_connection_aws_secondary | Secondary PacketFabric AWS Cloud Router Connection (Private VIF) (if redundant is true) |
 | cloud_router_connection_google_primary | Primary PacketFabric Google Cloud Router Connection |
 | cloud_router_connection_google_secondary | Secondary PacketFabric Google Cloud Router Connection (if redundant is true) |
+| cloud_router_connection_azure_primary | Primary PacketFabric Azure Cloud Router Connection |
+| cloud_router_connection_azure_secondary | Secondary PacketFabric Azure Cloud Router Connection (if redundant is true) |
 | total_price_mrc | Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections |
 
 ## Support Information
