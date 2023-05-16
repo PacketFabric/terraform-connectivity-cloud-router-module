@@ -19,12 +19,13 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 | Ecosystem | Version |
 |-----------|---------|
 | [terraform](https://www.terraform.io) | ">= 1.3.0" |
+<!-- | [terraform](https://www.terraform.io) | ">= 1.1.0, < 1.3.0" | -->
 
 ### Terraform Providers
 
 | Name | Version |
 |------|---------|
-| [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.6.0 |
+| [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.5.0 |
 | [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 4.62.0 |
 | [Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest) | >= 4.61.0 |
 | [Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest) | >= 3.56.0 |
@@ -110,6 +111,8 @@ module "packetfabric" {
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
   google_cloud_router_connections = {
+    name           = "my-google-connection"
+    labels         = ["dev"]
     google_project = "prefab-setting-357415"
     google_region  = "us-west1"
     google_network = "myvpc"
@@ -117,12 +120,16 @@ module "packetfabric" {
   }
   # PacketFabric Cloud Router Connection to AWS
   aws_cloud_router_connections = {
+    name       = "my-aws-connection"
+    labels     = ["dev"]
     aws_region = "us-east-1"
     aws_vpc_id = "vpc-bea401c4"
     aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
   }
   # PacketFabric Cloud Router Connection to Azure
   azure_cloud_router_connections = {
+    name                  = "my-azure-connection"
+    labels                = ["dev"]
     azure_region          = "North Central US"
     azure_resource_group  = "MyResourceGroup"
     azure_vnet            = "MyVnet"
@@ -214,8 +221,8 @@ module "packetfabric" {
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
-| name                      | Yes      | | The base name all Network services created in PacketFabric, Google and AWS |
-| labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router and Cloud Router Connections |
+| name                      | Yes      | | The name of the PacketFabric Cloud Router |
+| labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router |
 | asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
 | capacity                  | No        | ">100Gbps" | The capacity of the PacketFabric Cloud Router |
 | regions                   | No       | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
@@ -238,8 +245,10 @@ module "packetfabric" {
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
+| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all AWS Network services will share the same name as the one defined in the Cloud Router |
+| labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | aws_region | Yes | | The AWS region |
-| aws_vpc_id | Yes | | The AWS VPC ID (makes sure your VPC is not already attached to an existing Virtual Private Gateway)|
+| aws_vpc_id | Yes | | The AWS VPC ID<br/>:warning: **must be in the region defined above and makes sure your VPC is not already attached to an existing Virtual Private Gateway**|
 | aws_asn1 | No | 64512 | The AWS ASN for the first connection |
 | aws_asn2 | No | 64513 | The AWS ASN for the second connection if redundant |
 | aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
@@ -254,9 +263,11 @@ module "packetfabric" {
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
+| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all Google Network services will share the same name as the one defined in the Cloud Router |
+| labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | google_project | Yes | | The Google Cloud project ID |
 | google_region | Yes | | The Google Cloud region |
-| google_network | Yes | | The Google Cloud VPC network name |
+| google_network | Yes | | The Google Cloud VPC network name<br/>:warning: **must be in the region defined above**|
 | google_asn | No | 16550 | The Google Cloud ASN |
 | google_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | google_speed | No | 1Gbps | The connection speed |
@@ -270,9 +281,11 @@ module "packetfabric" {
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
+| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all Azure Network services will share the same name as the one defined in the Cloud Router |
+| labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router | |
 | azure_resource_group | Yes | | The Azure Resource group |
 | azure_region | Yes | | The Azure Cloud region |
-| azure_vnet | Yes | | The Azure Cloud VNet name |
+| azure_vnet | Yes | | The Azure Cloud VNet name<br/>:warning: **must be in the region defined above**|
 | azure_asn |  | 12076 | The Azure Cloud ASN (cannot be changed) |
 | azure_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection is defined on the Azure side [Search for PacketFabric](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers) |
 | azure_speed | No | 1Gbps | The connection speed |

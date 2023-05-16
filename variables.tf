@@ -37,6 +37,8 @@ variable "cr_id" {
 variable "aws_cloud_router_connections" {
   description = "An object representing the AWS Cloud Router Connections."
   type = object({
+    name       = optional(string)
+    labels     = optional(list(string))
     aws_region = string
     aws_vpc_id = string
     aws_asn1   = optional(number)
@@ -57,6 +59,8 @@ variable "aws_cloud_router_connections" {
 variable "google_cloud_router_connections" {
   description = "A object representing the Google Cloud Router Connections."
   type = object({
+    name = optional(string)
+    labels = optional(list(string))
     google_project = string
     google_region  = string
     google_network = string
@@ -77,6 +81,8 @@ variable "google_cloud_router_connections" {
 variable "azure_cloud_router_connections" {
   description = "An object representing the Azure Cloud Router Connections."
   type = object({
+    name = optional(string)
+    labels = optional(list(string))
     azure_region          = string
     azure_resource_group  = string
     azure_vnet            = string

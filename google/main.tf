@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
   }
 }
@@ -13,7 +13,7 @@ terraform {
 resource "packetfabric_cloud_provider_credential_google" "google_creds" {
   provider    = packetfabric
   count       = var.module_enabled ? 1 : 0
-  description = "${var.name}-google"
+  description = "${var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name}-google"
   # using env var GOOGLE_CREDENTIALS
 }
 
@@ -49,7 +49,7 @@ output "google_in_prefixes" {
 resource "google_compute_router" "google_router" {
   provider = google
   count    = var.module_enabled ? 1 : 0
-  name     = var.name
+  name     = var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name
   region   = var.google_cloud_router_connections.google_region
   project  = var.google_cloud_router_connections.google_project
   network  = var.google_cloud_router_connections.google_network
@@ -71,8 +71,8 @@ resource "google_compute_router" "google_router" {
 resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   provider    = packetfabric
   count       = var.module_enabled ? 1 : 0
-  description = "${var.name}-primary"
-  labels      = var.labels
+  description = "${var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name}-primary"
+  labels      = var.google_cloud_router_connections.labels != null ? var.google_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.google_cloud_router_connections.google_pop
   speed       = var.google_cloud_router_connections.google_speed != null ? var.google_cloud_router_connections.google_speed : "1Gbps"
@@ -80,7 +80,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
     credentials_uuid                = packetfabric_cloud_provider_credential_google.google_creds[0].id
     google_project_id               = var.google_cloud_router_connections.google_project
     google_region                   = var.google_cloud_router_connections.google_region
-    google_vlan_attachment_name     = "${var.name}-primary"
+    google_vlan_attachment_name     = "${var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name}-primary"
     google_cloud_router_name        = google_compute_router.google_router[0].name
     google_vpc_name                 = var.google_cloud_router_connections.google_network
     google_edge_availability_domain = 1
@@ -142,8 +142,8 @@ data "packetfabric_billing" "crc_google_primary" {
 resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   provider    = packetfabric
   count       = var.module_enabled ? (var.google_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  description = "${var.name}-secondary"
-  labels      = var.labels
+  description = "${var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name}-secondary"
+  labels      = var.google_cloud_router_connections.labels != null ? var.google_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.google_cloud_router_connections.google_pop
   speed       = var.google_cloud_router_connections.google_speed != null ? var.google_cloud_router_connections.google_speed : "1Gbps"
@@ -151,7 +151,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
     credentials_uuid                = packetfabric_cloud_provider_credential_google.google_creds[0].id
     google_project_id               = var.google_cloud_router_connections.google_project
     google_region                   = var.google_cloud_router_connections.google_region
-    google_vlan_attachment_name     = "${var.name}-secondary"
+    google_vlan_attachment_name     = "${var.google_cloud_router_connections.name != null ? var.google_cloud_router_connections.name : var.name}-secondary"
     google_cloud_router_name        = google_compute_router.google_router[0].name
     google_vpc_name                 = var.google_cloud_router_connections.google_network
     google_edge_availability_domain = 2

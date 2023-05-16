@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
   }
 }
@@ -55,7 +55,7 @@ locals {
 resource "azurerm_express_route_circuit" "azure_express_route" {
   provider              = azurerm
   count                 = var.module_enabled ? 1 : 0
-  name                  = var.name
+  name                  = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
   resource_group_name   = var.azure_cloud_router_connections.azure_resource_group
   location              = var.azure_cloud_router_connections.azure_region
   peering_location      = var.azure_cloud_router_connections.azure_pop
@@ -66,7 +66,7 @@ resource "azurerm_express_route_circuit" "azure_express_route" {
     family = var.azure_sku_family
   }
   tags = {
-    environment = "${var.name}"
+    environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
   }
 }
 
@@ -74,8 +74,8 @@ resource "azurerm_express_route_circuit" "azure_express_route" {
 resource "packetfabric_cloud_router_connection_azure" "crc_azure_primary" {
   provider          = packetfabric
   count             = var.module_enabled ? 1 : 0
-  description       = "${var.name}-primary"
-  labels            = var.labels
+  description       = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}-primary"
+  labels            = var.azure_cloud_router_connections.labels != null ? var.azure_cloud_router_connections.labels : var.labels
   circuit_id        = var.cr_id
   azure_service_key = azurerm_express_route_circuit.azure_express_route[0].service_key
   speed             = var.azure_cloud_router_connections.azure_speed != null ? var.azure_cloud_router_connections.azure_speed : "1Gbps"
@@ -91,6 +91,9 @@ resource "azurerm_express_route_circuit_peering" "private_circuity" {
   primary_peer_address_prefix   = var.azure_primary_peer_address_prefix
   secondary_peer_address_prefix = var.azure_secondary_peer_address_prefix
   vlan_id                       = packetfabric_cloud_router_connection_azure.crc_azure_primary[0].vlan_id_private
+  depends_on = [
+    azurerm_virtual_network_gateway.vng[0]
+  ]
 }
 
 resource "packetfabric_cloud_router_bgp_session" "bgp_azure_primary" {
@@ -153,8 +156,8 @@ data "packetfabric_billing" "crc_azure_primary" {
 resource "packetfabric_cloud_router_connection_azure" "crc_azure_secondary" {
   provider          = packetfabric
   count             = var.module_enabled ? (var.azure_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  description       = "${var.name}-secondary"
-  labels            = var.labels
+  description       = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}-secondary"
+  labels            = var.azure_cloud_router_connections.labels != null ? var.azure_cloud_router_connections.labels : var.labels
   circuit_id        = var.cr_id
   speed             = var.azure_cloud_router_connections.azure_speed != null ? var.azure_cloud_router_connections.azure_speed : "1Gbps"
   azure_service_key = azurerm_express_route_circuit.azure_express_route[0].service_key
@@ -210,13 +213,13 @@ resource "packetfabric_cloud_router_bgp_session" "bgp_azure_secondary" {
 resource "azurerm_public_ip" "public_ip_vng" {
   provider            = azurerm
   count               = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-  name                = var.name
+  name                = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
   location            = var.azure_cloud_router_connections.azure_region
   resource_group_name = var.azure_cloud_router_connections.azure_resource_group
   allocation_method   = "Static"
   sku                 = "Standard"
   tags = {
-    environment = "${var.name}"
+    environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
   }
 }
 
@@ -225,7 +228,7 @@ resource "azurerm_public_ip" "public_ip_vng" {
 resource "azurerm_virtual_network_gateway" "vng" {
   provider            = azurerm
   count               = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-  name                = var.name
+  name                = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
   location            = var.azure_cloud_router_connections.azure_region
   resource_group_name = var.azure_cloud_router_connections.azure_resource_group
   type                = "ExpressRoute"
@@ -234,10 +237,10 @@ resource "azurerm_virtual_network_gateway" "vng" {
     name                          = "vnetGatewayConfig"
     public_ip_address_id          = azurerm_public_ip.public_ip_vng[0].id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = "/subscriptions/${var.azure_cloud_router_connections.azure_resource_group}/providers/Microsoft.Network/virtualNetworks/${var.azure_cloud_router_connections.azure_subscription_id}/resourceGroups/${var.azure_cloud_router_connections.azure_resource_group}/providers/Microsoft.Network/virtualNetworks/${var.azure_cloud_router_connections.azure_vnet}/subnets/GatewaySubnet"
+    subnet_id                     = "/subscriptions/${var.azure_cloud_router_connections.azure_subscription_id}/resourceGroups/${var.azure_cloud_router_connections.azure_resource_group}/providers/Microsoft.Network/virtualNetworks/${var.azure_cloud_router_connections.azure_vnet}/subnets/GatewaySubnet"
   }
   tags = {
-    environment = "${var.name}"
+    environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
   }
 }
 
@@ -245,7 +248,7 @@ resource "azurerm_virtual_network_gateway" "vng" {
 resource "azurerm_virtual_network_gateway_connection" "vng_connection" {
   provider                   = azurerm
   count                      = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-  name                       = var.name
+  name                       = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
   location                   = var.azure_cloud_router_connections.azure_region
   resource_group_name        = var.azure_cloud_router_connections.azure_resource_group
   type                       = "ExpressRoute"
@@ -253,7 +256,7 @@ resource "azurerm_virtual_network_gateway_connection" "vng_connection" {
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vng[0].id
   routing_weight             = 0
   tags = {
-    environment = "${var.name}"
+    environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
   }
 }
 

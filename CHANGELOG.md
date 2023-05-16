@@ -1,9 +1,3 @@
-## 0.3.0  (May 18, 2023)
-
-FEATURES:
-
-* Adding Azure standalone or redundant Cloud Router Connection support (#6)
-
 ## 0.2.1  (May 8, 2023)
 
 IMPROVEMENTS/ENHANCEMENTS:

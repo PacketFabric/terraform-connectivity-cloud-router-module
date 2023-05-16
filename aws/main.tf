@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
   }
 }
@@ -17,7 +17,8 @@ provider "aws" {
 resource "packetfabric_cloud_provider_credential_aws" "aws_creds" {
   provider    = packetfabric
   count       = var.module_enabled ? 1 : 0
-  description = "${var.name}-aws"
+  description = var.name
+  # description = "${var.aws_cloud_router_connections.name != null ? var.aws_cloud_router_connections.name : var.name}-aws"
   # using env var PF_AWS_ACCESS_KEY_ID and PF_AWS_SECRET_ACCESS_KEY
 }
 
@@ -48,7 +49,7 @@ resource "aws_vpn_gateway" "vpn_gw" {
   amazon_side_asn = var.aws_cloud_router_connections.aws_asn1 != null ? var.aws_cloud_router_connections.aws_asn1 : 64512
   vpc_id          = var.aws_cloud_router_connections.aws_vpc_id
   tags = {
-    Name = var.name
+    Name = "${var.aws_cloud_router_connections.name != null ? var.aws_cloud_router_connections.name : var.name}"
   }
 }
 
@@ -67,7 +68,7 @@ resource "time_sleep" "delay" {
 resource "aws_dx_gateway" "direct_connect_gw" {
   provider        = aws
   count           = var.module_enabled ? 1 : 0
-  name            = var.name
+  name            = var.aws_cloud_router_connections.name != null ? var.aws_cloud_router_connections.name : var.name
   amazon_side_asn = var.aws_cloud_router_connections.aws_asn2 != null ? var.aws_cloud_router_connections.aws_asn2 : 64513
 }
 
@@ -99,8 +100,8 @@ data "packetfabric_locations_cloud" "locations_pop_zones_aws" {
 resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
   provider    = packetfabric
   count       = var.module_enabled ? 1 : 0
-  description = "${var.name}-primary"
-  labels      = var.labels
+  description = "${var.aws_cloud_router_connections.name != null ? var.aws_cloud_router_connections.name : var.name}-primary"
+  labels      = var.aws_cloud_router_connections.labels != null ? var.aws_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.aws_cloud_router_connections.aws_pop
   zone        = data.packetfabric_locations_cloud.locations_pop_zones_aws[0].cloud_locations[0].zones[0]
@@ -183,8 +184,8 @@ data "packetfabric_billing" "crc_aws_primary" {
 resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   provider    = packetfabric
   count       = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  description = "${var.name}-secondary"
-  labels      = var.labels
+  description = "${var.aws_cloud_router_connections.name != null ? var.aws_cloud_router_connections.name : var.name}-secondary"
+  labels      = var.aws_cloud_router_connections.labels != null ? var.aws_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.aws_cloud_router_connections.aws_pop
   zone        = data.packetfabric_locations_cloud.locations_pop_zones_aws[0].cloud_locations[0].zones[1]

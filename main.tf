@@ -2,7 +2,7 @@ terraform {
   required_providers {
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -17,7 +17,11 @@ terraform {
       version = ">= 3.56.0"
     }
   }
+  # for CR module only
   required_version = ">= 1.3.0"
+  # for NIA branch only
+  # required_version = ">= 1.1.0, < 1.3.0"
+  # experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
 }
 
 # PacketFabric Cloud Router
