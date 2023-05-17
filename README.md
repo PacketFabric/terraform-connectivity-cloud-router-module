@@ -61,7 +61,13 @@ az feature register --namespace Microsoft.Network --name AllowExpressRoutePorts
 az provider register -n Microsoft.Network
 ```
 
-:warning: **Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).**
+:warning: **Subnet Overlap Between Cloud Providers**
+
+When using multiple cloud providers, be cautious of potential subnet overlap. Subnet overlap occurs when conflicting IP address ranges are used in different cloud networks.
+
+:warning: **Azure Gateway subnet**
+
+Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).
 
 ## Setup
 
@@ -237,7 +243,9 @@ module "packetfabric" {
 - By default, the BGP prefixes for AWS and Google are configured to use the VPC network as the allowed prefix from/to each cloud.
 - To explore pricing options, please visit the [PacketFabric pricing tool](https://packetfabric.com/pricing)
 
-:warning: **Please be aware that creating AWS or Azure Cloud Router connections can take up to 30-60 minutes due to the gateway association operation on the CSP side.**
+:warning: **AWS and Azure Cloud Router Connection Creation Time**
+
+Please be aware that creating AWS or Azure Cloud Router connections can take up to 30-60 minutes due to the gateway association operation on the CSP side.
 
 ### AWS
 
@@ -295,7 +303,9 @@ module "packetfabric" {
 | bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
 | bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
-:warning: **Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).**
+:warning: **Azure Gateway subnet**
+
+Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).
 
 **Note**: The BGP session for Azure is using the following default prefixes: `169.254.247.40/30` (primary) and `169.254.247.44/30` (secondary). Also Azure SKU Tier is set to `Standard` and SKU Family to `MeterdData` in the ExpressRoute. If you like to be able to customize those, please feel free to open a [GitHub Issue](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues).
 
