@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
   }
 }
@@ -282,14 +282,4 @@ output "cloud_router_connection_azure_primary" {
 output "cloud_router_connection_azure_secondary" {
   value       = packetfabric_cloud_router_connection_azure.crc_azure_secondary
   description = "Secondary PacketFabric Azure Cloud Router Connection (if redundant is true)"
-}
-
-output "azure_crc_primary_billing" {
-  description = "Billing information for the primary Azure Cloud Router Connection"
-  value       = try(data.packetfabric_billing.crc_azure_primary[0].billings, [])
-}
-
-output "azure_crc_secondary_billing" {
-  description = "Billing information for the secondary Azure Cloud Router Connection (if created)"
-  value       = try(data.packetfabric_billing.crc_azure_secondary[0].billings, [])
 }

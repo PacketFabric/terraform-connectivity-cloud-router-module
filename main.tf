@@ -2,7 +2,7 @@ terraform {
   required_providers {
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -18,10 +18,10 @@ terraform {
     }
   }
   # for CR module only
-  # required_version = ">= 1.3.0"
+  required_version = ">= 1.3.0"
   # for NIA branch only
-  required_version = ">= 1.1.0, < 1.3.0"
-  experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
+  # required_version = ">= 1.1.0, < 1.3.0"
+  # experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
 }
 
 # PacketFabric Cloud Router
@@ -48,7 +48,7 @@ data "packetfabric_billing" "billing_cr" {
 
 module "aws" {
   source                       = "./aws"
-  module_enabled               = var.aws_cloud_router_connections != null
+  module_enabled               = length(var.aws_cloud_router_connections) > 0
   name                         = var.name
   labels                       = var.labels
   google_in_prefixes           = try(module.google.google_in_prefixes, [])
@@ -59,7 +59,7 @@ module "aws" {
 
 module "google" {
   source                          = "./google"
-  module_enabled                  = var.google_cloud_router_connections != null
+  module_enabled                  = length(var.google_cloud_router_connections) > 0
   name                            = var.name
   labels                          = var.labels
   aws_in_prefixes                 = try(module.aws.aws_in_prefixes, [])
@@ -70,7 +70,7 @@ module "google" {
 
 module "azure" {
   source                         = "./azure"
-  module_enabled                 = var.azure_cloud_router_connections != null
+  module_enabled                 = length(var.azure_cloud_router_connections) > 0
   name                           = var.name
   labels                         = var.labels
   aws_in_prefixes                = try(module.aws.aws_in_prefixes, [])
@@ -78,64 +78,4 @@ module "azure" {
   cr_id                          = packetfabric_cloud_router.cr.id
   cr_asn                         = var.asn
   azure_cloud_router_connections = var.azure_cloud_router_connections
-}
-
-locals {
-  cr_monthly_prices = flatten([
-    for billing in data.packetfabric_billing.billing_cr.billings : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ])
-  cr_monthly_price = try(sum(local.cr_monthly_prices), 0)
-
-  aws_crc_primary_monthly_prices = try(flatten([
-    for billing in module.aws.aws_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  aws_crc_primary_monthly_price = try(sum(local.aws_crc_primary_monthly_prices), 0)
-
-  aws_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.aws.aws_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  aws_crc_secondary_monthly_price = try(sum(local.aws_crc_secondary_monthly_prices), 0)
-
-  google_crc_primary_monthly_prices = try(flatten([
-    for billing in module.google.google_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  google_crc_primary_monthly_price = try(sum(local.google_crc_primary_monthly_prices), 0)
-
-  google_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.google.google_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  google_crc_secondary_monthly_price = try(sum(local.google_crc_secondary_monthly_prices), 0)
-
-  azure_crc_primary_monthly_prices = try(flatten([
-    for billing in module.azure.azure_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  azure_crc_primary_monthly_price = try(sum(local.azure_crc_primary_monthly_prices), 0)
-
-  azure_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.azure.azure_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  azure_crc_secondary_monthly_price = try(sum(local.azure_crc_secondary_monthly_prices), 0)
-
-  total_price_mrc = local.cr_monthly_price + local.aws_crc_primary_monthly_price + local.aws_crc_secondary_monthly_price + local.google_crc_primary_monthly_price + local.google_crc_secondary_monthly_price + local.azure_crc_primary_monthly_price + local.azure_crc_secondary_monthly_price
 }

@@ -23,7 +23,12 @@ output "cloud_router_connection_google_secondary" {
   description = "Secondary PacketFabric Google Cloud Router Connection (if redundant is true)"
 }
 
-output "total_price_mrc" {
-  description = "Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections"
-  value       = local.total_price_mrc
+output "cloud_router_connection_azure_primary" {
+  value       = module.google.cloud_router_connection_azure_primary
+  description = "Primary PacketFabric Azure Cloud Router Connection"
+}
+
+output "cloud_router_connection_azure_secondary" {
+  value       = module.google.cloud_router_connection_azure_secondary
+  description = "Secondary PacketFabric Azure Cloud Router Connection (if redundant is true)"
 }
