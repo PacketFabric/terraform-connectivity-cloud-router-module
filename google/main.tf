@@ -88,23 +88,23 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
     bgp_settings {
       remote_asn = coalesce(var.google_cloud_router_connections[count.index].google_asn, 16550)
       # OUT: Allowed Prefixes to Cloud (to Google)
-      dynamic "prefixes" {
-        for_each = (
-          (length(var.aws_in_prefixes) == 0 &&
-          length(coalesce(var.aws_cloud_router_connections[count.index].bgp_prefixes, [])) == 0) &&
-          (length(var.azure_in_prefixes) == 0 &&
-          length(coalesce(var.azure_cloud_router_connections[count.index].bgp_prefixes, [])) == 0)
-          ) ? ["0.0.0.0/0"] : toset(concat(
-            [for prefix in var.aws_in_prefixes : prefix.prefix],
-            [for prefix in var.azure_in_prefixes : prefix.prefix],
-            length(var.google_cloud_router_connections[count.index].bgp_prefixes) > 0 ? [for prefix in var.google_cloud_router_connections[count.index].bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
-        ))
-        content {
-          prefix     = prefixes.value
-          type       = "out"
-          match_type = coalesce(var.google_cloud_router_connections[count.index].bgp_prefixes_match_type, "exact")
-        }
-      }
+      # dynamic "prefixes" {
+      #   for_each = (
+      #     (length(var.aws_in_prefixes) == 0 &&
+      #     length(coalesce(var.aws_cloud_router_connections[count.index].bgp_prefixes, [])) == 0) &&
+      #     (length(var.azure_in_prefixes) == 0 &&
+      #     length(coalesce(var.azure_cloud_router_connections[count.index].bgp_prefixes, [])) == 0)
+      #     ) ? ["0.0.0.0/0"] : toset(concat(
+      #       [for prefix in var.aws_in_prefixes : prefix.prefix],
+      #       [for prefix in var.azure_in_prefixes : prefix.prefix],
+      #       length(var.google_cloud_router_connections[count.index].bgp_prefixes) > 0 ? [for prefix in var.google_cloud_router_connections[count.index].bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
+      #   ))
+      #   content {
+      #     prefix     = prefixes.value
+      #     type       = "out"
+      #     match_type = coalesce(var.google_cloud_router_connections[count.index].bgp_prefixes_match_type, "exact")
+      #   }
+      # }
       # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
         for_each = toset(concat(
@@ -145,23 +145,23 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
       # local_preference = 1
       remote_asn = var.google_cloud_router_connections[count.index].google_asn != null ? var.google_cloud_router_connections[count.index].google_asn : 16550
       # OUT: Allowed Prefixes to Cloud (to Google)
-      dynamic "prefixes" {
-        for_each = (
-          (length(var.aws_in_prefixes) == 0 &&
-          length(try(coalesce(var.aws_cloud_router_connections[count.index].bgp_prefixes, []), [])) == 0) &&
-          (length(var.azure_in_prefixes) == 0 &&
-          length(try(coalesce(var.azure_cloud_router_connections[count.index].bgp_prefixes, []), [])) == 0)
-          ) ? ["0.0.0.0/0"] : toset(concat(
-            [for prefix in var.aws_in_prefixes : prefix.prefix],
-            [for prefix in var.azure_in_prefixes : prefix.prefix],
-            var.google_cloud_router_connections[count.index].bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections[count.index].bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
-        ))
-        content {
-          prefix     = prefixes.value
-          type       = "out"
-          match_type = var.google_cloud_router_connections[count.index].bgp_prefixes_match_type != null ? var.google_cloud_router_connections[count.index].bgp_prefixes_match_type : "exact"
-        }
-      }
+      # dynamic "prefixes" {
+      #   for_each = (
+      #     (length(var.aws_in_prefixes) == 0 &&
+      #     length(try(coalesce(var.aws_cloud_router_connections[count.index].bgp_prefixes, []), [])) == 0) &&
+      #     (length(var.azure_in_prefixes) == 0 &&
+      #     length(try(coalesce(var.azure_cloud_router_connections[count.index].bgp_prefixes, []), [])) == 0)
+      #     ) ? ["0.0.0.0/0"] : toset(concat(
+      #       [for prefix in var.aws_in_prefixes : prefix.prefix],
+      #       [for prefix in var.azure_in_prefixes : prefix.prefix],
+      #       var.google_cloud_router_connections[count.index].bgp_prefixes != null ? [for prefix in var.google_cloud_router_connections[count.index].bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
+      #   ))
+      #   content {
+      #     prefix     = prefixes.value
+      #     type       = "out"
+      #     match_type = var.google_cloud_router_connections[count.index].bgp_prefixes_match_type != null ? var.google_cloud_router_connections[count.index].bgp_prefixes_match_type : "exact"
+      #   }
+      # }
       # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
         for_each = toset(concat(
