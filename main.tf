@@ -34,18 +34,6 @@ resource "packetfabric_cloud_router" "cr" {
   labels   = var.labels
 }
 
-# Adding a short delay to allow the Cloud Router to be created before we query for billing
-resource "time_sleep" "delay" {
-  depends_on      = [packetfabric_cloud_router.cr]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "billing_cr" {
-  provider   = packetfabric
-  circuit_id = packetfabric_cloud_router.cr.id
-  depends_on = [time_sleep.delay]
-}
-
 module "aws" {
   source                       = "./aws"
   module_enabled               = var.aws_cloud_router_connections != null
@@ -78,64 +66,4 @@ module "azure" {
   cr_id                          = packetfabric_cloud_router.cr.id
   cr_asn                         = var.asn
   azure_cloud_router_connections = var.azure_cloud_router_connections
-}
-
-locals {
-  cr_monthly_prices = flatten([
-    for billing in data.packetfabric_billing.billing_cr.billings : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ])
-  cr_monthly_price = try(sum(local.cr_monthly_prices), 0)
-
-  aws_crc_primary_monthly_prices = try(flatten([
-    for billing in module.aws.aws_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  aws_crc_primary_monthly_price = try(sum(local.aws_crc_primary_monthly_prices), 0)
-
-  aws_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.aws.aws_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  aws_crc_secondary_monthly_price = try(sum(local.aws_crc_secondary_monthly_prices), 0)
-
-  google_crc_primary_monthly_prices = try(flatten([
-    for billing in module.google.google_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  google_crc_primary_monthly_price = try(sum(local.google_crc_primary_monthly_prices), 0)
-
-  google_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.google.google_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  google_crc_secondary_monthly_price = try(sum(local.google_crc_secondary_monthly_prices), 0)
-
-  azure_crc_primary_monthly_prices = try(flatten([
-    for billing in module.azure.azure_crc_primary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  azure_crc_primary_monthly_price = try(sum(local.azure_crc_primary_monthly_prices), 0)
-
-  azure_crc_secondary_monthly_prices = try(flatten([
-    for billing in module.azure.azure_crc_secondary_billing : [
-      for billable in billing.billables :
-      billable.price * (billable.price_type == "monthly" ? 1 : 0)
-    ]
-  ]), [])
-  azure_crc_secondary_monthly_price = try(sum(local.azure_crc_secondary_monthly_prices), 0)
-
-  total_price_mrc = local.cr_monthly_price + local.aws_crc_primary_monthly_price + local.aws_crc_secondary_monthly_price + local.google_crc_primary_monthly_price + local.google_crc_secondary_monthly_price + local.azure_crc_primary_monthly_price + local.azure_crc_secondary_monthly_price
 }
