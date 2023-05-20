@@ -36,7 +36,7 @@ resource "packetfabric_cloud_router" "cr" {
 
 module "aws" {
   source                       = "./aws"
-  module_enabled               = length(var.aws_cloud_router_connections) > 0
+  module_enabled               = length(coalesce(var.aws_cloud_router_connections, [])) > 0
   name                         = var.name
   labels                       = var.labels
   google_in_prefixes           = try(module.google.google_in_prefixes, [])
@@ -47,7 +47,7 @@ module "aws" {
 
 module "google" {
   source                          = "./google"
-  module_enabled                  = length(var.google_cloud_router_connections) > 0
+  module_enabled                  = length(coalesce(var.google_cloud_router_connections, [])) > 0
   name                            = var.name
   labels                          = var.labels
   aws_in_prefixes                 = try(module.aws.aws_in_prefixes, [])
@@ -58,7 +58,7 @@ module "google" {
 
 module "azure" {
   source                         = "./azure"
-  module_enabled                 = length(var.azure_cloud_router_connections) > 0
+  module_enabled                 = length(coalesce(var.azure_cloud_router_connections, [])) > 0
   name                           = var.name
   labels                         = var.labels
   aws_in_prefixes                = try(module.aws.aws_in_prefixes, [])
