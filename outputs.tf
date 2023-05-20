@@ -24,11 +24,11 @@ output "cloud_router_connection_google_secondary" {
 }
 
 output "cloud_router_connection_azure_primary" {
-  value       = module.google.cloud_router_connection_azure_primary
+  value       = module.azure.cloud_router_connection_azure_primary
   description = "Primary PacketFabric Azure Cloud Router Connection"
 }
 
 output "cloud_router_connection_azure_secondary" {
-  value       = module.google.cloud_router_connection_azure_secondary
+  value       = module.azure.cloud_router_connection_azure_secondary
   description = "Secondary PacketFabric Azure Cloud Router Connection (if redundant is true)"
 }
