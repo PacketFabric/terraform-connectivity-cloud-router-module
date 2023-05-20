@@ -143,9 +143,6 @@ module "packetfabric" {
     azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
   }
 }
-output "total_price_monthly_recurring_cost" {
-  value = module.packetfabric.total_price_mrc
-}
 ```
 
 ### Example Cloud Router AWS/Google usage with single connections specifying the speed
@@ -320,7 +317,6 @@ Please ensure that the Virtual Network (VNet) you choose is equipped with a Gate
 | cloud_router_connection_google_secondary | Secondary PacketFabric Google Cloud Router Connection (if redundant is true) |
 | cloud_router_connection_azure_primary | Primary PacketFabric Azure Cloud Router Connection |
 | cloud_router_connection_azure_secondary | Secondary PacketFabric Azure Cloud Router Connection (if redundant is true) |
-| total_price_mrc | Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections |
 
 ## Support Information
 
