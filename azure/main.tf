@@ -138,20 +138,6 @@ resource "packetfabric_cloud_router_bgp_session" "bgp_azure_primary" {
   }
 }
 
-# Wait 30s before getting the billing information
-resource "time_sleep" "delay1" {
-  count           = var.module_enabled ? 1 : 0
-  depends_on      = [packetfabric_cloud_router_connection_azure.crc_azure_primary[0]]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_azure_primary" {
-  provider   = packetfabric
-  count      = var.module_enabled ? 1 : 0
-  circuit_id = packetfabric_cloud_router_connection_azure.crc_azure_primary[0].id
-  depends_on = [time_sleep.delay1]
-}
-
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_azure" "crc_azure_secondary" {
   provider          = packetfabric
@@ -258,20 +244,6 @@ resource "azurerm_virtual_network_gateway_connection" "vng_connection" {
   tags = {
     environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
   }
-}
-
-# Wait for the secondary connection to be created before getting billing info
-resource "time_sleep" "delay2" {
-  count           = var.module_enabled ? (var.azure_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  depends_on      = [packetfabric_cloud_router_connection_azure.crc_azure_secondary[0]]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_azure_secondary" {
-  provider   = packetfabric
-  count      = var.module_enabled ? (var.azure_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  circuit_id = packetfabric_cloud_router_connection_azure.crc_azure_secondary[0].id
-  depends_on = [time_sleep.delay2]
 }
 
 output "cloud_router_connection_azure_primary" {

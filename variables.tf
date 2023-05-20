@@ -36,7 +36,7 @@ variable "cr_id" {
 # PacketFabric Cloud Router Connection AWS
 variable "aws_cloud_router_connections" {
   description = "List of objects representing the AWS Cloud Router Connections."
-  type = List(object({
+  type = list(object({
     name       = optional(string)
     labels     = optional(list(string))
     aws_region = string
@@ -58,7 +58,7 @@ variable "aws_cloud_router_connections" {
 # PacketFabric Cloud Router Conection Google
 variable "google_cloud_router_connections" {
   description = "List of objects representing the Google Cloud Router Connections."
-  type = List(object({
+  type = list(object({
     name = optional(string)
     labels = optional(list(string))
     google_project = string
@@ -80,7 +80,7 @@ variable "google_cloud_router_connections" {
 # PacketFabric Cloud Router Conection Azure -- not yet available open an issue on github
 variable "azure_cloud_router_connections" {
   description = "List of objects representing the Azure Cloud Router Connections."
-  type = List(object({
+  type = list(object({
     name = optional(string)
     labels = optional(list(string))
     azure_region          = string

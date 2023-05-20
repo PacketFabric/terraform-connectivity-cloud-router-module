@@ -166,20 +166,6 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
   ]
 }
 
-# Wait 30s before getting the billing information
-resource "time_sleep" "delay1" {
-  count           = var.module_enabled ? 1 : 0
-  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_primary[0]]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_aws_primary" {
-  provider   = packetfabric
-  count      = var.module_enabled ? 1 : 0
-  circuit_id = packetfabric_cloud_router_connection_aws.crc_aws_primary[0].id
-  depends_on = [time_sleep.delay1]
-}
-
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   provider    = packetfabric
@@ -249,20 +235,6 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   depends_on = [
     packetfabric_cloud_router_connection_aws.crc_aws_primary[0]
   ]
-}
-
-# Wait for the secondary connection to be created before getting billing info
-resource "time_sleep" "delay2" {
-  count           = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  depends_on      = [packetfabric_cloud_router_connection_aws.crc_aws_secondary[0]]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_aws_secondary" {
-  provider   = packetfabric
-  count      = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
-  circuit_id = packetfabric_cloud_router_connection_aws.crc_aws_secondary[0].id
-  depends_on = [time_sleep.delay2]
 }
 
 output "cloud_router_connection_aws_primary" {

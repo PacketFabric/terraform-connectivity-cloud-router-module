@@ -34,18 +34,6 @@ resource "packetfabric_cloud_router" "cr" {
   labels   = var.labels
 }
 
-# Adding a short delay to allow the Cloud Router to be created before we query for billing
-resource "time_sleep" "delay" {
-  depends_on      = [packetfabric_cloud_router.cr]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "billing_cr" {
-  provider   = packetfabric
-  circuit_id = packetfabric_cloud_router.cr.id
-  depends_on = [time_sleep.delay]
-}
-
 module "aws" {
   source                       = "./aws"
   module_enabled               = length(var.aws_cloud_router_connections) > 0

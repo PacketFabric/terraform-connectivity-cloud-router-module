@@ -121,20 +121,6 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   }
 }
 
-# Wait 30s before getting the billing information
-resource "time_sleep" "delay1" {
-  count           = length(var.google_cloud_router_connections)
-  depends_on      = [packetfabric_cloud_router_connection_google.crc_google_primary]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_google_primary" {
-  provider   = packetfabric
-  count      = length(var.google_cloud_router_connections)
-  circuit_id = packetfabric_cloud_router_connection_google.crc_google_primary[count.index].id
-  depends_on = [time_sleep.delay1]
-}
-
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   provider    = packetfabric
@@ -192,22 +178,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
   }
   # Create one connection at a time, especially for update
   depends_on = [
-    packetfabric_cloud_router_connection_google.crc_google_primary[count.index]
+    packetfabric_cloud_router_connection_google.crc_google_primary
   ]
-}
-
-# Wait for the secondary connection to be created before checking billing
-resource "time_sleep" "delay2" {
-  count           = length(var.google_cloud_router_connections) ? (var.google_cloud_router_connections[count.index].redundant == true ? 1 : 0) : 0
-  depends_on      = [packetfabric_cloud_router_connection_google.crc_google_secondary[count.index]]
-  create_duration = "30s"
-}
-
-data "packetfabric_billing" "crc_google_secondary" {
-  provider   = packetfabric
-  count      = length(var.google_cloud_router_connections) ? (var.google_cloud_router_connections[count.index].redundant == true ? 1 : 0) : 0
-  circuit_id = packetfabric_cloud_router_connection_google.crc_google_secondary[count.index].id
-  depends_on = [time_sleep.delay2]
 }
 
 output "cloud_router_connection_google_primary" {
