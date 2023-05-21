@@ -8,10 +8,10 @@ output "cloud_router_connection_aws_primary" {
   description = "Primary PacketFabric AWS Cloud Router Connection(s)"
 }
 
-output "cloud_router_connection_aws_secondary" {
-  value       = module.aws.cloud_router_connection_aws_secondary
-  description = "Secondary PacketFabric AWS Cloud Router Connection(s) (if redundant is true)"
-}
+# output "cloud_router_connection_aws_secondary" {
+#   value       = module.aws.cloud_router_connection_aws_secondary
+#   description = "Secondary PacketFabric AWS Cloud Router Connection(s) (if redundant is true)"
+# }
 
 output "cloud_router_connection_google_primary" {
   value       = module.google.cloud_router_connection_google_primary

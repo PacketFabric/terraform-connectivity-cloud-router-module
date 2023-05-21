@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.5.0"
+      version = ">= 1.6.0"
     }
   }
 }
@@ -214,54 +214,57 @@ resource "packetfabric_cloud_router_bgp_session" "bgp_azure_secondary" {
   }
 }
 
-# # From the Microsoft side: Create a virtual network gateway for ExpressRoute.
-# resource "azurerm_public_ip" "public_ip_vng" {
-#   provider            = azurerm
-#   count               = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-#   name                = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
-#   location            = var.azure_cloud_router_connections.azure_region
-#   resource_group_name = var.azure_cloud_router_connections.azure_resource_group
-#   allocation_method   = "Static"
-#   sku                 = "Standard"
-#   tags = {
-#     environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
-#   }
-# }
+# From the Microsoft side: Create a virtual network gateway for ExpressRoute.
+resource "azurerm_public_ip" "public_ip_vng" {
+  provider = azurerm
+  for_each = {
+    for idx, connection in coalesce(var.azure_cloud_router_connections, []) : idx => connection if connection.skip_gateway != true
+  }
+  name                = each.value.name != null ? each.value.name : var.name
+  location            = each.value.azure_region
+  resource_group_name = each.value.azure_resource_group
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags = {
+    environment = each.value.name != null ? each.value.name : var.name
+  }
+}
 
-# # Please be aware that provisioning a Virtual Network Gateway takes a long time (between 30 minutes and 1 hour)
-# # Deletion can take up to 15 minutes
-# resource "azurerm_virtual_network_gateway" "vng" {
-#   provider            = azurerm
-#   count               = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-#   name                = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
-#   location            = var.azure_cloud_router_connections.azure_region
-#   resource_group_name = var.azure_cloud_router_connections.azure_resource_group
-#   type                = "ExpressRoute"
-#   sku                 = "Standard"
-#   ip_configuration {
-#     name                          = "vnetGatewayConfig"
-#     public_ip_address_id          = azurerm_public_ip.public_ip_vng[0].id
-#     private_ip_address_allocation = "Dynamic"
-#     subnet_id                     = "/subscriptions/${var.azure_cloud_router_connections.azure_subscription_id}/resourceGroups/${var.azure_cloud_router_connections.azure_resource_group}/providers/Microsoft.Network/virtualNetworks/${var.azure_cloud_router_connections.azure_vnet}/subnets/GatewaySubnet"
-#   }
-#   tags = {
-#     environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
-#   }
-# }
+
+# Please be aware that provisioning a Virtual Network Gateway takes a long time (between 30 minutes and 1 hour)
+# Deletion can take up to 15 minutes
+resource "azurerm_virtual_network_gateway" "vng" {
+  provider            = azurerm
+  for_each            = { for idx, connection in coalesce(var.azure_cloud_router_connections, []) : idx => connection if connection.skip_gateway != true }
+  name                = each.value.name != null ? each.value.name : var.name
+  location            = each.value.azure_region
+  resource_group_name = each.value.azure_resource_group
+  type                = "ExpressRoute"
+  sku                 = "Standard"
+  ip_configuration {
+    name                          = "vnetGatewayConfig"
+    public_ip_address_id          = azurerm_public_ip.public_ip_vng[each.key].id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = "/subscriptions/${each.value.azure_subscription_id}/resourceGroups/${each.value.azure_resource_group}/providers/Microsoft.Network/virtualNetworks/${each.value.azure_vnet}/subnets/GatewaySubnet"
+  }
+  tags = {
+    environment = each.value.name != null ? each.value.name : var.name
+  }
+}
 
 # From the Microsoft side: Link a virtual network gateway to the ExpressRoute circuit.
 resource "azurerm_virtual_network_gateway_connection" "vng_connection" {
   provider                   = azurerm
-  count                      = var.module_enabled ? (var.azure_cloud_router_connections.skip_gateway != true ? 1 : 0) : 0
-  name                       = var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name
-  location                   = var.azure_cloud_router_connections.azure_region
-  resource_group_name        = var.azure_cloud_router_connections.azure_resource_group
+  for_each                   = { for idx, connection in coalesce(var.azure_cloud_router_connections, []) : idx => connection if connection.skip_gateway != true }
+  name                       = each.value.name != null ? each.value.name : var.name
+  location                   = each.value.azure_region
+  resource_group_name        = each.value.azure_resource_group
   type                       = "ExpressRoute"
-  express_route_circuit_id   = azurerm_express_route_circuit.azure_express_route[0].id
-  virtual_network_gateway_id = azurerm_virtual_network_gateway.vng[0].id
+  express_route_circuit_id   = azurerm_express_route_circuit.azure_express_route[each.key].id
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.vng[each.key].id
   routing_weight             = 0
   tags = {
-    environment = "${var.azure_cloud_router_connections.name != null ? var.azure_cloud_router_connections.name : var.name}"
+    environment = each.value.name != null ? each.value.name : var.name
   }
 }
 

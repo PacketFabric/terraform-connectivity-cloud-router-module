@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.5.0"
+      version = ">= 1.6.0"
     }
   }
 }
@@ -50,7 +50,7 @@ output "google_in_prefixes" {
 resource "google_compute_router" "google_router" {
   provider = google
   count    = length(coalesce(var.google_cloud_router_connections, []))
-  name     = var.google_cloud_router_connections[count.index].name != "" ? var.google_cloud_router_connections[count.index].name : var.name
+  name     = var.google_cloud_router_connections[count.index].name
   region   = var.google_cloud_router_connections[count.index].google_region
   project  = var.google_cloud_router_connections[count.index].google_project
   network  = var.google_cloud_router_connections[count.index].google_network

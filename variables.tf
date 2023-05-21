@@ -53,6 +53,11 @@ variable "aws_cloud_router_connections" {
     bgp_prefixes_match_type = optional(string)
   }))
   default = null
+
+  validation {
+    condition     = length(coalesce(var.aws_cloud_router_connections, [])) <= 1
+    error_message = "You must provide no more than one AWS Cloud Router Connection."
+  }
 }
 
 # PacketFabric Cloud Router Conection Google
@@ -101,7 +106,7 @@ variable "azure_cloud_router_connections" {
   default = null
 
   validation {
-    condition     = length(var.azure_cloud_router_connections) <= 1
+    condition     = length(coalesce(var.azure_cloud_router_connections, [])) <= 1
     error_message = "You must provide no more than one Azure Cloud Router Connection."
   }
 }

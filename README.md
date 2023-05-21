@@ -25,7 +25,7 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 
 | Name | Version |
 |------|---------|
-| [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.5.0 |
+| [PacketFabric Terraform Provider](https://registry.terraform.io/providers/PacketFabric/packetfabric) | >= 1.6.0 |
 | [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest) | >= 4.62.0 |
 | [Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest) | >= 4.61.0 |
 | [Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest) | >= 3.56.0 |
