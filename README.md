@@ -151,7 +151,7 @@ module "packetfabric" {
 }
 ```
 
-### Example Cloud Router AWS/Google usage with single connections specifying the speed
+### Example Cloud Router AWS/Google/Azure usage with single connections specifying the speed
 
 ```hcl
 module "packetfabric" {
@@ -181,6 +181,19 @@ module "packetfabric" {
       aws_vpc_id = "vpc-bea401c4"
       aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
       aws_speed  = "2Gbps"
+    }
+  ]
+  # PacketFabric Cloud Router Connection to Azure
+  azure_cloud_router_connections = [
+    {
+      name                  = "my-azure-connection"
+      labels                = ["dev"]
+      azure_region          = "North Central US"
+      azure_resource_group  = "MyResourceGroup"
+      azure_vnet            = "MyVnet"
+      azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
+      azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
+      azure_speed           = "2Gbps"
     }
   ]
 }
@@ -231,6 +244,25 @@ module "packetfabric" {
         {
           prefix = "10.1.1.0/24"
           type   = "out" # Allowed Prefixes to Cloud (to AWS)
+        }
+      ]
+    }
+  ]
+  azure_cloud_router_connections = [
+    {
+      name                  = "my-azure-connection"
+      labels                = ["dev"]
+      azure_region          = "North Central US"
+      azure_resource_group  = "MyResourceGroup"
+      azure_vnet            = "MyVnet"
+      azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
+      azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
+      azure_speed           = "2Gbps"
+      redundant             = true
+      bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
+        {
+          prefix = "192.168.1.0/24"
+          type   = "out" # Allowed Prefixes to Cloud (to Azure)
         }
       ]
     }
