@@ -4,7 +4,7 @@ terraform {
     # As a result, it is necessary to specify the source of the provider in both parent and child modules.
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
   }
 }

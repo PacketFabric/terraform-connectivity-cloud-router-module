@@ -2,7 +2,7 @@ terraform {
   required_providers {
     packetfabric = {
       source  = "PacketFabric/packetfabric"
-      version = ">= 1.6.0"
+      version = ">= 1.5.0"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -18,10 +18,10 @@ terraform {
     }
   }
   # for CR module only
-  # required_version = ">= 1.3.0"
+  required_version = ">= 1.3.0"
   # for NIA branch only
-  required_version = ">= 1.1.0, < 1.3.0"
-  experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
+  # required_version = ">= 1.1.0, < 1.3.0"
+  # experiments      = [module_variable_optional_attrs] # until consul-terraform-sync supports terraform v1.3+
 }
 
 # PacketFabric Cloud Router
@@ -36,7 +36,7 @@ resource "packetfabric_cloud_router" "cr" {
 
 module "aws" {
   source                       = "./aws"
-  module_enabled               = var.aws_cloud_router_connections != null
+  module_enabled               = length(coalesce(var.aws_cloud_router_connections, [])) > 0
   name                         = var.name
   labels                       = var.labels
   google_in_prefixes           = try(module.google.google_in_prefixes, [])
@@ -47,7 +47,7 @@ module "aws" {
 
 module "google" {
   source                          = "./google"
-  module_enabled                  = var.google_cloud_router_connections != null
+  module_enabled                  = length(coalesce(var.google_cloud_router_connections, [])) > 0
   name                            = var.name
   labels                          = var.labels
   aws_in_prefixes                 = try(module.aws.aws_in_prefixes, [])
@@ -58,7 +58,7 @@ module "google" {
 
 module "azure" {
   source                         = "./azure"
-  module_enabled                 = var.azure_cloud_router_connections != null
+  module_enabled                 = length(coalesce(var.azure_cloud_router_connections, [])) > 0
   name                           = var.name
   labels                         = var.labels
   aws_in_prefixes                = try(module.aws.aws_in_prefixes, [])

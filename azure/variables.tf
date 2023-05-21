@@ -26,17 +26,6 @@ variable "module_enabled" {
   default     = true
 }
 
-variable "azure_primary_peer_address_prefix" {
-  type        = string
-  description = "Primary subnet Azure ExpressRoute"
-  default     = "169.254.247.40/30"
-}
-variable "azure_secondary_peer_address_prefix" {
-  type        = string
-  description = "Secondary subnet Azure ExpressRoute"
-  default     = "169.254.247.44/30"
-}
-
 variable "azure_sku_tier" {
   type    = string
   default = "Standard" # Standard or Premium
