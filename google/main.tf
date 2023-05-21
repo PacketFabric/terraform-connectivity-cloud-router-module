@@ -12,7 +12,7 @@ terraform {
 # Import Google Credentials to PacketFabric to provision the cloud side of the connection
 resource "packetfabric_cloud_provider_credential_google" "google_creds" {
   provider    = packetfabric
-  count       = length(var.google_cloud_router_connections) > 0 ? 1 : 0
+  count       = length(coalesce(var.google_cloud_router_connections, [])) > 0 ? 1 : 0
   description = "${var.google_cloud_router_connections[0].name != null ? var.google_cloud_router_connections[0].name : var.name}-google"
   # using env var GOOGLE_CREDENTIALS
 }
@@ -20,7 +20,7 @@ resource "packetfabric_cloud_provider_credential_google" "google_creds" {
 # Get the Google VPC
 data "google_compute_network" "google_vpc" {
   provider = google
-  count    = length(var.google_cloud_router_connections)
+  count    = length(coalesce(var.google_cloud_router_connections, []))
   project  = var.google_cloud_router_connections[count.index].google_project
   name     = var.google_cloud_router_connections[count.index].google_network
 }
@@ -32,12 +32,13 @@ data "google_compute_subnetwork" "google_subnets" {
   self_link = flatten(data.google_compute_network.google_vpc[*].subnetworks_self_links)[count.index]
 }
 
+# Get the prefixes of the subnets
 locals {
-  # Get the prefixes of the subnets
   google_in_prefixes = {
-    for i, subnet in data.google_compute_subnetwork.google_subnets : subnet.self_link => {
+    for i, subnet in data.google_compute_subnetwork.google_subnets : "${i}-${subnet.self_link}" => {
       prefix = subnet.ip_cidr_range
-    } if subnet.region == var.google_cloud_router_connections[i % length(var.google_cloud_router_connections)].google_region
+      region = subnet.region
+    } if subnet.region == coalesce(var.google_cloud_router_connections, [])[i % length(coalesce(var.google_cloud_router_connections, []))].google_region
   }
 }
 
@@ -48,7 +49,7 @@ output "google_in_prefixes" {
 # Google Cloud Router
 resource "google_compute_router" "google_router" {
   provider = google
-  count    = length(var.google_cloud_router_connections)
+  count    = length(coalesce(var.google_cloud_router_connections, []))
   name     = var.google_cloud_router_connections[count.index].name != "" ? var.google_cloud_router_connections[count.index].name : var.name
   region   = var.google_cloud_router_connections[count.index].google_region
   project  = var.google_cloud_router_connections[count.index].google_project
@@ -70,8 +71,8 @@ resource "google_compute_router" "google_router" {
 # PacketFabric Google Cloud Router Connection(s)
 resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   provider    = packetfabric
-  count       = length(var.google_cloud_router_connections)
-  description = coalesce(var.google_cloud_router_connections[count.index].name, var.name, "") != "" ? var.google_cloud_router_connections[count.index].name : "${var.name}-primary"
+  count       = length(coalesce(var.google_cloud_router_connections, []))
+  description = "${var.google_cloud_router_connections[count.index].name}-primary"
   labels      = length(coalesce(var.google_cloud_router_connections[count.index].labels, var.labels, [])) > 0 ? var.google_cloud_router_connections[count.index].labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.google_cloud_router_connections[count.index].google_pop
@@ -87,17 +88,20 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
     mtu                             = 1500
     bgp_settings {
       remote_asn = coalesce(var.google_cloud_router_connections[count.index].google_asn, 16550)
+      # # Primary - Set AS Prepend to 1 and Local Pref to 10 to prioritized traffic to the primary
+      # as_prepend       = 1
+      # local_preference = 10
       # OUT: Allowed Prefixes to Cloud (to Google)
       dynamic "prefixes" {
         for_each = (
-            (
-              length(var.aws_in_prefixes) == 0 
-              # && length(coalesce(var.aws_cloud_router_connections[count.index].bgp_prefixes, [])) == 0
-            ) 
-            && (
-              length(var.azure_in_prefixes) == 0
-              # && length(coalesce(var.azure_cloud_router_connections[count.index].bgp_prefixes, [])) == 0
-            )
+          (
+            length(var.aws_in_prefixes) == 0 &&
+            length(coalesce(var.aws_cloud_router_connections, [])[*].bgp_prefixes[count.index] == null ? [] : var.aws_cloud_router_connections[*].bgp_prefixes[count.index]) == 0
+          )
+          && (
+            length(var.azure_in_prefixes) == 0 &&
+            length(coalesce(var.azure_cloud_router_connections, [])[*].bgp_prefixes[count.index] == null ? [] : var.azure_cloud_router_connections[*].bgp_prefixes[count.index]) == 0
+          )
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
             [for prefix in var.azure_in_prefixes : prefix.prefix],
@@ -112,7 +116,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
       # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
         for_each = toset(concat(
-          [for prefix in local.google_in_prefixes : prefix.prefix],
+          [for key, value in local.google_in_prefixes : value.prefix if value.region == var.google_cloud_router_connections[count.index].google_region],
           length(coalesce(var.google_cloud_router_connections[count.index].bgp_prefixes, [])) > 0 ? [for prefix in var.google_cloud_router_connections[count.index].bgp_prefixes : prefix.prefix if prefix.type == "in"] : []
         ))
         content {
@@ -127,10 +131,11 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
 
 # Create the redundant connection if redundant set to true
 resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
-  provider  = packetfabric
-  for_each  = { for idx, connection in var.google_cloud_router_connections : idx => connection if connection.redundant == true }
-
-  description = "${each.value.name != "" ? each.value.name : var.name}-secondary"
+  provider = packetfabric
+  for_each = {
+    for idx, connection in coalesce(var.google_cloud_router_connections, []) : idx => connection if connection.redundant == true
+  }
+  description = "${each.value.name}-secondary"
   labels      = each.value.labels != null ? each.value.labels : var.labels
   circuit_id  = var.cr_id
   pop         = each.value.google_pop
@@ -152,30 +157,36 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
       # local_preference = 1
       # OUT: Allowed Prefixes to Cloud (to Google)
       dynamic "prefixes" {
-        # TODO: missing 0.0.0.0/ if no out prefixes from other clouds
-        for_each = each.value.redundant == true ? toset(concat(
-          [for prefix in var.aws_in_prefixes : prefix.prefix],
-          [for prefix in var.azure_in_prefixes : prefix.prefix],
-          each.value.bgp_prefixes != null ? [for prefix in each.value.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
-        )) : []
-
+        for_each = (
+          (
+            length(var.aws_in_prefixes) == 0 &&
+            length(coalesce(var.aws_cloud_router_connections, [])[*].bgp_prefixes[each.key] == null ? [] : var.aws_cloud_router_connections[*].bgp_prefixes[each.key]) == 0
+          )
+          && (
+            length(var.azure_in_prefixes) == 0 &&
+            length(coalesce(var.azure_cloud_router_connections, [])[*].bgp_prefixes[each.key] == null ? [] : var.azure_cloud_router_connections[*].bgp_prefixes[each.key]) == 0
+          )
+          ) ? ["0.0.0.0/0"] : toset(concat(
+            [for prefix in var.aws_in_prefixes : prefix.prefix],
+            [for prefix in var.azure_in_prefixes : prefix.prefix],
+            length(coalesce(each.value.bgp_prefixes, [])) > 0 ? [for prefix in each.value.bgp_prefixes : prefix.prefix if prefix.type == "out"] : []
+        ))
         content {
           prefix     = prefixes.value
           type       = "out"
-          match_type = each.value.bgp_prefixes_match_type != null ? each.value.bgp_prefixes_match_type : "exact"
+          match_type = coalesce(each.value.bgp_prefixes_match_type, "exact")
         }
       }
       # IN: Allowed Prefixes from Cloud (from Google)
       dynamic "prefixes" {
-        for_each = each.value.redundant == true ? toset(concat(
-          [for prefix in local.google_in_prefixes : prefix.prefix],
-          each.value.bgp_prefixes != null ? [for prefix in each.value.bgp_prefixes : prefix.prefix if prefix.type == "in"] : []
-        )) : []
-
+        for_each = toset(concat(
+          [for key, value in local.google_in_prefixes : value.prefix if value.region == var.google_cloud_router_connections[each.key].google_region],
+          length(coalesce(each.value.bgp_prefixes, [])) > 0 ? [for prefix in each.value.bgp_prefixes : prefix.prefix if prefix.type == "in"] : []
+        ))
         content {
           prefix     = prefixes.value
           type       = "in"
-          match_type = each.value.bgp_prefixes_match_type != null ? each.value.bgp_prefixes_match_type : "exact"
+          match_type = coalesce(each.value.bgp_prefixes_match_type, "exact")
         }
       }
     }

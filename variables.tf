@@ -59,8 +59,8 @@ variable "aws_cloud_router_connections" {
 variable "google_cloud_router_connections" {
   description = "List of objects representing the Google Cloud Router Connections."
   type = list(object({
-    name = optional(string)
-    labels = optional(list(string))
+    name           = optional(string)
+    labels         = optional(list(string))
     google_project = string
     google_region  = string
     google_network = string
@@ -81,8 +81,8 @@ variable "google_cloud_router_connections" {
 variable "azure_cloud_router_connections" {
   description = "List of objects representing the Azure Cloud Router Connections."
   type = list(object({
-    name = optional(string)
-    labels = optional(list(string))
+    name                  = optional(string)
+    labels                = optional(list(string))
     azure_region          = string
     azure_resource_group  = string
     azure_vnet            = string
@@ -99,6 +99,11 @@ variable "azure_cloud_router_connections" {
     provider                = optional(string) # Use "Packet Fabric Test" for internal PF dev testing
   }))
   default = null
+
+  validation {
+    condition     = length(var.azure_cloud_router_connections) <= 1
+    error_message = "You must provide no more than one Azure Cloud Router Connection."
+  }
 }
 
 variable "aws_in_prefixes" {

@@ -116,32 +116,38 @@ module "packetfabric" {
   name    = "demo-standalone1"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
-  google_cloud_router_connections = {
-    name           = "my-google-connection"
-    labels         = ["dev"]
-    google_project = "prefab-setting-357415"
-    google_region  = "us-west1"
-    google_network = "myvpc"
-    google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
-  }
+  google_cloud_router_connections = [
+    {
+      name           = "my-google-connection"
+      labels         = ["dev"]
+      google_project = "prefab-setting-357415"
+      google_region  = "us-west1"
+      google_network = "myvpc"
+      google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
+    }
+  ]
   # PacketFabric Cloud Router Connection to AWS
-  aws_cloud_router_connections = {
-    name       = "my-aws-connection"
-    labels     = ["dev"]
-    aws_region = "us-east-1"
-    aws_vpc_id = "vpc-bea401c4"
-    aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
-  }
+  aws_cloud_router_connections = [
+    {
+      name       = "my-aws-connection"
+      labels     = ["dev"]
+      aws_region = "us-east-1"
+      aws_vpc_id = "vpc-bea401c4"
+      aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
+    }
+  ]
   # PacketFabric Cloud Router Connection to Azure
-  azure_cloud_router_connections = {
-    name                  = "my-azure-connection"
-    labels                = ["dev"]
-    azure_region          = "North Central US"
-    azure_resource_group  = "MyResourceGroup"
-    azure_vnet            = "MyVnet"
-    azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
-    azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
-  }
+  azure_cloud_router_connections = [
+    {
+      name                  = "my-azure-connection"
+      labels                = ["dev"]
+      azure_region          = "North Central US"
+      azure_resource_group  = "MyResourceGroup"
+      azure_vnet            = "MyVnet"
+      azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
+      azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
+    }
+  ]
 }
 ```
 
@@ -157,20 +163,26 @@ module "packetfabric" {
   asn      = 4556
   capacity = "10Gbps"
   # PacketFabric Cloud Router Connection to Google
-  google_cloud_router_connections = {
-    google_project = "prefab-setting-357415"
-    google_region  = "us-west1"
-    google_network = "myvpc"
-    google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
-    google_speed   = "2Gbps"
-  }
+  google_cloud_router_connections = [
+    {
+      name           = "my-google-connection"
+      google_project = "prefab-setting-357415"
+      google_region  = "us-west1"
+      google_network = "myvpc"
+      google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
+      google_speed   = "2Gbps"
+    }
+  ]
   # PacketFabric Cloud Router Connection to AWS
-  aws_cloud_router_connections = {
-    aws_region = "us-east-1"
-    aws_vpc_id = "vpc-bea401c4"
-    aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
-    aws_speed  = "2Gbps"
-  }
+  aws_cloud_router_connections = [
+    {
+      name       = "my-aws-connection"
+      aws_region = "us-east-1"
+      aws_vpc_id = "vpc-bea401c4"
+      aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
+      aws_speed  = "2Gbps"
+    }
+  ]
 }
 ```
 
@@ -186,37 +198,43 @@ module "packetfabric" {
   asn      = 4556
   capacity = "10Gbps"
   # PacketFabric Cloud Router Connection to Google
-  google_cloud_router_connections = {
-    google_project = "prefab-setting-357415"
-    google_region  = "us-west1"
-    google_network = "default"
-    google_asn     = 16550
-    google_pop     = "SFO1" # https://packetfabric.com/locations/cloud-on-ramps
-    google_speed   = "1Gbps"
-    redundant      = true
-    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
-      {
-        prefix = "172.16.1.0/24"
-        type   = "out" # Allowed Prefixes to Cloud (to Google)
-      }
-    ]
-  }
+  google_cloud_router_connections = [
+    {
+      name           = "my-google-connection"
+      google_project = "prefab-setting-357415"
+      google_region  = "us-west1"
+      google_network = "default"
+      google_asn     = 16550
+      google_pop     = "SFO1" # https://packetfabric.com/locations/cloud-on-ramps
+      google_speed   = "1Gbps"
+      redundant      = true
+      bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
+        {
+          prefix = "172.16.1.0/24"
+          type   = "out" # Allowed Prefixes to Cloud (to Google)
+        }
+      ]
+    }
+  ]
   # PacketFabric Cloud Router Connection to AWS
-  aws_cloud_router_connections = {
-    aws_region = "us-east-1"
-    aws_vpc_id = "vpc-bea401c4"
-    aws_asn1   = 64512
-    aws_asn2   = 64513
-    aws_pop    = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
-    aws_speed  = "2Gbps"
-    redundant  = true
-    bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
-      {
-        prefix = "10.1.1.0/24"
-        type   = "out" # Allowed Prefixes to Cloud (to AWS)
-      }
-    ]
-  }
+  aws_cloud_router_connections = [
+    {
+      name       = "my-aws-connection"
+      aws_region = "us-east-1"
+      aws_vpc_id = "vpc-bea401c4"
+      aws_asn1   = 64512
+      aws_asn2   = 64513
+      aws_pop    = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
+      aws_speed  = "2Gbps"
+      redundant  = true
+      bgp_prefixes = [ # The prefixes in question must already be present as routes within the route table that is associated with the VPC
+        {
+          prefix = "10.1.1.0/24"
+          type   = "out" # Allowed Prefixes to Cloud (to AWS)
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -235,7 +253,6 @@ module "packetfabric" {
 
 **Note**: 
 
-- Only 1 object for `aws_cloud_router_connections`, `google_cloud_router_connections` and `azure_cloud_router_connections` can be defined.
 - The default Maximum Transmission Unit (MTU) is set to `1500` in both AWS and Google.
 - By default, the BGP prefixes for AWS and Google are configured to use the VPC network as the allowed prefix from/to each cloud.
 - To explore pricing options, please visit the [PacketFabric pricing tool](https://packetfabric.com/pricing)
@@ -250,7 +267,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
-| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all AWS Network services will share the same name as the one defined in the Cloud Router |
+| name                      | Yes      | | The name of the PacketFabric Cloud Router Connection and other resources created in AWS |
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | aws_region | Yes | | The AWS region |
 | aws_vpc_id | Yes | | The AWS VPC ID<br/>:warning: **must be in the region defined above and makes sure your VPC is not already attached to an existing Virtual Private Gateway**|
@@ -268,7 +285,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
-| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all Google Network services will share the same name as the one defined in the Cloud Router |
+| name                      | Yes      | | The name of the PacketFabric Cloud Router Connection and other resources created in Google |
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | google_project | Yes | | The Google Cloud project ID |
 | google_region | Yes | | The Google Cloud region |
@@ -286,7 +303,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
-| name                      | No      | | If not specified, the PacketFabric Cloud Router Connection and all Azure Network services will share the same name as the one defined in the Cloud Router |
+| name                      | Yes      | | The name of the PacketFabric Cloud Router Connection and other resources created in Azure |
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router | |
 | azure_resource_group | Yes | | The Azure Resource group |
 | azure_region | Yes | | The Azure Cloud region |
@@ -304,19 +321,19 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 
 Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).
 
-**Note**: The BGP session for Azure is using the following default prefixes: `169.254.247.40/30` (primary) and `169.254.247.44/30` (secondary). Also Azure SKU Tier is set to `Standard` and SKU Family to `MeterdData` in the ExpressRoute. If you like to be able to customize those, please feel free to open a [GitHub Issue](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues).
+**Note**: The BGP session for Azure is using the following default prefixes: `169.254.244.40/30` (primary) and `169.254.244.44/30` (secondary). Also Azure SKU Tier is set to `Standard` and SKU Family to `MeterdData` in the ExpressRoute. If you like to be able to customize those, please feel free to open a [GitHub Issue](https://github.com/PacketFabric/terraform-connectivity-cloud-router-module/issues).
 
 ### Output Variables
 
 | Name | Description |
 |------|-------------|
 | cloud_router_circuit_id | PacketFabric Cloud Router Circuit ID |
-| cloud_router_connection_aws_primary | Primary PacketFabric AWS Cloud Router Connection (Private VIF) |
-| cloud_router_connection_aws_secondary | Secondary PacketFabric AWS Cloud Router Connection (Private VIF) (if redundant is true) |
-| cloud_router_connection_google_primary | Primary PacketFabric Google Cloud Router Connection |
-| cloud_router_connection_google_secondary | Secondary PacketFabric Google Cloud Router Connection (if redundant is true) |
-| cloud_router_connection_azure_primary | Primary PacketFabric Azure Cloud Router Connection |
-| cloud_router_connection_azure_secondary | Secondary PacketFabric Azure Cloud Router Connection (if redundant is true) |
+| cloud_router_connection_aws_primary | Primary PacketFabric AWS Cloud Router Connection(s) (Private VIF) |
+| cloud_router_connection_aws_secondary | Secondary PacketFabric AWS Cloud Router Connection(s) (Private VIF) (if redundant is true) |
+| cloud_router_connection_google_primary | Primary PacketFabric Google Cloud Router Connection(s) |
+| cloud_router_connection_google_secondary | Secondary PacketFabric Google Cloud Router Connection(s) (if redundant is true) |
+| cloud_router_connection_azure_primary | Primary PacketFabric Azure Cloud Router Connection(s) |
+| cloud_router_connection_azure_secondary | Secondary PacketFabric Azure Cloud Router Connection(s) (if redundant is true) |
 
 ## Support Information
 
