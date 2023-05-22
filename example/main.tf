@@ -11,7 +11,7 @@ module "packetfabric_cloud_router" {
       aws_region = var.aws_region
       aws_vpc_id = var.aws_vpc_id
       aws_pop    = var.aws_pop
-      #   redundant  = true
+      # redundant  = true
     }
   ]
   google_cloud_router_connections = [
@@ -31,7 +31,7 @@ module "packetfabric_cloud_router" {
       azure_resource_group  = var.azure_resource_group
       azure_vnet            = var.azure_vnet
       azure_pop             = var.azure_pop
-      skip_gateway          = true
+      # skip_gateway          = true
       azure_subscription_id = var.azure_subscription_id
       # redundant             = true
     }
