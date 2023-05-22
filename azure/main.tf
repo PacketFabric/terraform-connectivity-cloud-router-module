@@ -61,7 +61,7 @@ resource "azurerm_express_route_circuit" "azure_express_route" {
   location              = var.azure_cloud_router_connections[count.index].azure_region
   peering_location      = var.azure_cloud_router_connections[count.index].azure_pop
   service_provider_name = var.azure_cloud_router_connections[count.index].provider != null ? var.azure_cloud_router_connections.provider : "PacketFabric"
-  bandwidth_in_mbps     = local.speed_map[var.azure_cloud_router_connections[count.index].azure_speed]
+  bandwidth_in_mbps     = try(local.speed_map[var.azure_cloud_router_connections[count.index].azure_speed], 1000)
   sku {
     tier   = var.azure_sku_tier
     family = var.azure_sku_family
