@@ -1,4 +1,3 @@
-variable "name" {}
 variable "labels" {}
 variable "cr_id" {}
 

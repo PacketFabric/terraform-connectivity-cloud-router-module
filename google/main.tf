@@ -13,7 +13,7 @@ terraform {
 resource "packetfabric_cloud_provider_credential_google" "google_creds" {
   provider    = packetfabric
   count       = length(coalesce(var.google_cloud_router_connections, [])) > 0 ? 1 : 0
-  description = "${var.google_cloud_router_connections[0].name != null ? var.google_cloud_router_connections[0].name : var.name}-google"
+  description = "${var.google_cloud_router_connections[0].name}-google"
   # using env var GOOGLE_CREDENTIALS
 }
 
@@ -81,7 +81,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
     credentials_uuid                = packetfabric_cloud_provider_credential_google.google_creds[0].id
     google_project_id               = var.google_cloud_router_connections[count.index].google_project
     google_region                   = var.google_cloud_router_connections[count.index].google_region
-    google_vlan_attachment_name     = coalesce(var.google_cloud_router_connections[count.index].name, var.name, "") != "" ? var.google_cloud_router_connections[count.index].name : "${var.name}-primary"
+    google_vlan_attachment_name     = "${var.google_cloud_router_connections[count.index].name}-primary"
     google_cloud_router_name        = google_compute_router.google_router[count.index].name
     google_vpc_name                 = var.google_cloud_router_connections[count.index].google_network
     google_edge_availability_domain = 1
@@ -98,7 +98,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
             length(var.aws_in_prefixes) == 0 &&
             length(coalesce(var.aws_cloud_router_connections, [])[*].bgp_prefixes[count.index] == null ? [] : var.aws_cloud_router_connections[*].bgp_prefixes[count.index]) == 0
           )
-          && (
+          &&
+          (
             length(var.azure_in_prefixes) == 0 &&
             length(coalesce(var.azure_cloud_router_connections, [])[*].bgp_prefixes[count.index] == null ? [] : var.azure_cloud_router_connections[*].bgp_prefixes[count.index]) == 0
           )
@@ -145,7 +146,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
     credentials_uuid                = packetfabric_cloud_provider_credential_google.google_creds[0].id
     google_project_id               = each.value.google_project
     google_region                   = each.value.google_region
-    google_vlan_attachment_name     = "${each.value.name != "" ? each.value.name : var.name}-secondary"
+    google_vlan_attachment_name     = "${each.value.name}-secondary"
     google_cloud_router_name        = google_compute_router.google_router[each.key].name
     google_vpc_name                 = each.value.google_network
     google_edge_availability_domain = 2
@@ -162,7 +163,8 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_secondary" {
             length(var.aws_in_prefixes) == 0 &&
             length(coalesce(var.aws_cloud_router_connections, [])[*].bgp_prefixes[each.key] == null ? [] : var.aws_cloud_router_connections[*].bgp_prefixes[each.key]) == 0
           )
-          && (
+          &&
+          (
             length(var.azure_in_prefixes) == 0 &&
             length(coalesce(var.azure_cloud_router_connections, [])[*].bgp_prefixes[each.key] == null ? [] : var.azure_cloud_router_connections[*].bgp_prefixes[each.key]) == 0
           )

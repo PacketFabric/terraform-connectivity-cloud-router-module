@@ -274,14 +274,15 @@ module "packetfabric" {
 
 | Input Variable | Required | Default | Description |
 |----------------|----------|----------|------------|
-| name                      | Yes      | | The name of the PacketFabric Cloud Router |
-| labels                    | No       | terraform | The labels to be assigned to the PacketFabric Cloud Router |
-| asn                       | No       | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
-| capacity                  | No        | ">100Gbps" | The capacity of the PacketFabric Cloud Router |
-| regions                   | No       | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
+| cr_id                     | No      | | The Circuit ID of the PacketFabric Cloud Router (if using an existing one) |
+| name                      | No      | | The name of the PacketFabric Cloud Router (if creating a new one) |
+| labels                    | No      | terraform | The labels to be assigned to the PacketFabric Cloud Router |
+| asn                       | No      | 4556 | The Autonomous System Number (ASN) for the PacketFabric Cloud Router |
+| capacity                  | No      | ">100Gbps" | The capacity of the PacketFabric Cloud Router |
+| regions                   | No      | ["US"] | The list of regions for the PacketFabric Cloud Router (["US", "UK"]) |
 | aws_cloud_router_connections | Yes     | | A list of objects representing the AWS Cloud Router Connections (Private VIF) |
 | google_cloud_router_connections | Yes  | | A list of objects representing the Google Cloud Router Connections |
-| azure_cloud_router_connections | Yes  | | A list of objects representing the Azure Cloud Router Connections |
+| azure_cloud_router_connections | Yes   | | A list of objects representing the Azure Cloud Router Connections |
 
 **Note**: 
 

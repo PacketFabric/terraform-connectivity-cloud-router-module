@@ -3,8 +3,8 @@ resource "random_pet" "name" {}
 module "packetfabric_cloud_router" {
   source  = "packetfabric/cloud-router-module/connectivity"
   version = "0.3.0"
-  name    = random_pet.name.id
-  labels  = ["terraform", "demo"]
+  name   = "${random_pet.name.id}"
+  labels = ["terraform", "demo"]
   aws_cloud_router_connections = [
     {
       name       = "${random_pet.name.id}-aws-west"
