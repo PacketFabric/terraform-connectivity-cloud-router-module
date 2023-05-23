@@ -73,7 +73,7 @@ resource "packetfabric_cloud_router_connection_google" "crc_google_primary" {
   provider    = packetfabric
   count       = length(coalesce(var.google_cloud_router_connections, []))
   description = "${var.google_cloud_router_connections[count.index].name}-primary"
-  labels      = length(coalesce(var.google_cloud_router_connections[count.index].labels, var.labels, [])) > 0 ? var.google_cloud_router_connections[count.index].labels : var.labels
+  labels      = coalesce(var.google_cloud_router_connections[count.index].labels, var.labels)
   circuit_id  = var.cr_id
   pop         = var.google_cloud_router_connections[count.index].google_pop
   speed       = coalesce(var.google_cloud_router_connections[count.index].google_speed, "1Gbps")

@@ -1,7 +1,7 @@
 resource "google_compute_firewall" "ssh-rule1" {
   provider = google
-  name     = random_pet.name.id
-  network  = var.google_network
+  name     = "${random_pet.name.id}-rule1"
+  network  = google_compute_network.vpc.name
   allow {
     protocol = "icmp"
   }
@@ -14,8 +14,8 @@ resource "google_compute_firewall" "ssh-rule1" {
 
 resource "google_compute_firewall" "ssh-rule2" {
   provider = google
-  name     = random_pet.name.id
-  network  = var.google_network
+  name     ="${random_pet.name.id}-rule2"
+  network  = google_compute_network.vpc.name
   allow {
     protocol = "tcp"
     ports    = ["22", "8089"]
@@ -25,7 +25,7 @@ resource "google_compute_firewall" "ssh-rule2" {
 
 resource "google_compute_instance" "vm" {
   provider     = google
-  name         = random_pet.name.id
+  name         = "${random_pet.name.id}-vm"
   machine_type = "e2-micro"
   zone         = var.google_zone
   tags         = ["${random_pet.name.id}"]
@@ -35,7 +35,7 @@ resource "google_compute_instance" "vm" {
     }
   }
   network_interface {
-    subnetwork = var.google_subnetwork
+    subnetwork = google_compute_subnetwork.subnet.name
     access_config {}
   }
   metadata_startup_script = file("./user-data-ubuntu.sh")

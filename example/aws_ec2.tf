@@ -1,7 +1,7 @@
 resource "aws_security_group" "ingress_all" {
   provider = aws
   name     = random_pet.name.id
-  vpc_id   = var.aws_vpc_id
+  vpc_id   = aws_vpc.vpc.id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -51,7 +51,7 @@ resource "aws_key_pair" "ssh_key" {
 # Create NIC for the EC2 instances
 resource "aws_network_interface" "nic1" {
   provider        = aws
-  subnet_id       = var.aws_subnet_id
+  subnet_id       = aws_subnet.subnet.id
   security_groups = ["${aws_security_group.ingress_all.id}"]
   tags = {
     Name = "${random_pet.name.id}1"

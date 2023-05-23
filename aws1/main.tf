@@ -10,6 +10,7 @@ terraform {
 }
 
 provider "aws" {
+  # we have to set it to something in case no aws connections are defined
   region = var.aws_cloud_router_connections != null ? var.aws_cloud_router_connections.aws_region : "us-east-1"
   alias  = "alias1"
 }
@@ -105,7 +106,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
   provider    = packetfabric
   count       = var.module_enabled ? 1 : 0
   description = "${var.aws_cloud_router_connections.name}-primary"
-  labels      = var.labels
+  labels      = var.aws_cloud_router_connections.labels != null ? var.aws_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.aws_cloud_router_connections.aws_pop
   zone        = data.packetfabric_locations_cloud.locations_pop_zones_aws[0].cloud_locations[0].zones[0]
@@ -185,7 +186,7 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
   provider    = packetfabric
   count       = var.module_enabled ? (var.aws_cloud_router_connections.redundant == true ? 1 : 0) : 0
   description = "${var.aws_cloud_router_connections.name}-secondary"
-  labels      = var.labels
+  labels      = var.aws_cloud_router_connections.labels != null ? var.aws_cloud_router_connections.labels : var.labels
   circuit_id  = var.cr_id
   pop         = var.aws_cloud_router_connections.aws_pop
   zone        = data.packetfabric_locations_cloud.locations_pop_zones_aws[0].cloud_locations[0].zones[1]

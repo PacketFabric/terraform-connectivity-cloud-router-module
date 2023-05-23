@@ -176,11 +176,20 @@ module "packetfabric" {
   # PacketFabric Cloud Router Connection to AWS
   aws_cloud_router_connections = [
     {
-      name       = "my-aws-connection"
+      name       = "my-aws-connection1"
       aws_region = "us-east-1"
       aws_vpc_id = "vpc-bea401c4"
       aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
       aws_speed  = "2Gbps"
+    },
+    {
+      name       = "my-aws-connection2"
+      aws_region = "us-west-1"
+      aws_vpc_id = "vpc-a2a546a7"
+      aws_pop    = "LAX1" # https://packetfabric.com/locations/cloud-on-ramps
+      aws_speed  = "2Gbps"
+      aws_asn1   = 64514
+      aws_asn2   = 64515
     }
   ]
   # PacketFabric Cloud Router Connection to Azure
@@ -199,7 +208,7 @@ module "packetfabric" {
 }
 ```
 
-### Example Cloud Router AWS/Google usage with redundant connections
+### Example Cloud Router AWS/Google/Azure usage with redundant connections
 
 ```hcl
 module "packetfabric" {
@@ -306,8 +315,8 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | aws_region | Yes | | The AWS region |
 | aws_vpc_id | Yes | | The AWS VPC ID<br/>:warning: **must be in the region defined above and makes sure your VPC is not already attached to an existing Virtual Private Gateway**|
-| aws_asn1 | No | 64512 | The AWS ASN for the first connection |
-| aws_asn2 | No | 64513 | The AWS ASN for the second connection if redundant |
+| aws_asn1 | No | 64512 | The AWS ASN of the Direct Connect Gateway (must update to private ASN - 64514 to 64517 - if more than 1 AWS Connection) |
+| aws_asn2 | No | 64513 | The AWS ASN of the Private Gateway (must update to private ASN - 64514 to 64517 - if more than 1 AWAS Connection) |
 | aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | aws_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |
@@ -325,7 +334,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | google_project | Yes | | The Google Cloud project ID |
 | google_region | Yes | | The Google Cloud region |
 | google_network | Yes | | The Google Cloud VPC network name<br/>:warning: **must be in the region defined above**|
-| google_asn | No | 16550 | The Google Cloud ASN |
+| google_asn | No | 16550 | The Google Cloud ASN (must update to private ASN - 64518 to 64520 - if more than 1 Google Connection) |
 | google_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | google_speed | No | 1Gbps | The connection speed |
 | redundant | No | false | Create a redundant connection if set to true |

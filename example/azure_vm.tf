@@ -2,7 +2,7 @@ resource "azurerm_network_security_group" "security_group" {
   provider            = azurerm
   name                = "${random_pet.name.id}-sg1"
   location            = var.azure_region
-  resource_group_name = var.azure_resource_group
+  resource_group_name = azurerm_resource_group.resource_group.name
   security_rule {
     name                       = "SSH"
     priority                   = 1001
@@ -56,7 +56,7 @@ resource "azurerm_public_ip" "public_ip_vm" {
   provider            = azurerm
   name                = "${random_pet.name.id}-public-ip-vm"
   location            = var.azure_region
-  resource_group_name = var.azure_resource_group
+  resource_group_name = azurerm_resource_group.resource_group.name
   allocation_method   = "Dynamic"
   tags = {
     environment = "${random_pet.name.id}"
@@ -67,11 +67,11 @@ resource "azurerm_network_interface" "nic" {
   provider            = azurerm
   name                = "${random_pet.name.id}-nic1"
   location            = var.azure_region
-  resource_group_name = var.azure_resource_group
+  resource_group_name = azurerm_resource_group.resource_group.name
 
   ip_configuration {
     name                          = random_pet.name.id
-    subnet_id                     = var.azure_subnet
+    subnet_id                     = azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.public_ip_vm.id
   }
@@ -90,7 +90,7 @@ resource "azurerm_ssh_public_key" "ssh_public_key" {
   provider            = azurerm
   name                = "${random_pet.name.id}-sshkey"
   location            = var.azure_region
-  resource_group_name = var.azure_resource_group
+  resource_group_name = azurerm_resource_group.resource_group.name
   public_key          = var.public_key
 }
 
@@ -98,7 +98,7 @@ resource "azurerm_virtual_machine" "vm" {
   provider                         = azurerm
   name                             = "${random_pet.name.id}-vm1"
   location                         = var.azure_region
-  resource_group_name              = var.azure_resource_group
+  resource_group_name              = azurerm_resource_group.resource_group.name
   network_interface_ids            = [azurerm_network_interface.nic.id]
   vm_size                          = "Standard_DS1_v2"
   delete_os_disk_on_termination    = true
@@ -129,7 +129,9 @@ resource "azurerm_virtual_machine" "vm" {
     }
   }
   depends_on = [
-    azurerm_network_interface.nic # shouldn't be needed but it sounds like Azure TF doesn't track the dependency properly
+    # shouldn't be needed but it sounds like Azure TF doesn't track the dependency properly
+    azurerm_network_interface.nic,
+    azurerm_network_interface_security_group_association.association
   ]
   tags = {
     environment = "${random_pet.name.id}"
@@ -139,9 +141,11 @@ resource "azurerm_virtual_machine" "vm" {
 data "azurerm_network_interface" "nic" {
   provider            = azurerm
   name                = "${random_pet.name.id}-nic1"
-  resource_group_name = var.azure_resource_group
+  resource_group_name = azurerm_resource_group.resource_group.name
   depends_on = [
-    azurerm_virtual_machine.vm
+    azurerm_virtual_machine.vm,
+    azurerm_public_ip.public_ip_vm,
+    azurerm_network_interface_security_group_association.association
   ]
 }
 output "private_ip_vm" {
@@ -151,8 +155,8 @@ output "private_ip_vm" {
 
 data "azurerm_public_ip" "public_ip_vm" {
   provider            = azurerm
-  name                = "${random_pet.name.id}-public-ip-vm1"
-  resource_group_name = var.azure_resource_group
+  name                = "${random_pet.name.id}-public-ip-vm"
+  resource_group_name = azurerm_resource_group.resource_group.name
   depends_on = [
     azurerm_virtual_machine.vm
   ]

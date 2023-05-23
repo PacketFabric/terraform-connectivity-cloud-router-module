@@ -76,7 +76,7 @@ resource "packetfabric_cloud_router_connection_azure" "crc_azure_primary" {
   provider          = packetfabric
   count             = length(coalesce(var.azure_cloud_router_connections, []))
   description       = "${var.azure_cloud_router_connections[count.index].name}-primary"
-  labels            = length(coalesce(var.azure_cloud_router_connections[count.index].labels, var.labels, [])) > 0 ? var.azure_cloud_router_connections[count.index].labels : var.labels
+  labels            = coalesce(var.azure_cloud_router_connections[count.index].labels, var.labels)
   circuit_id        = var.cr_id
   azure_service_key = azurerm_express_route_circuit.azure_express_route[count.index].service_key
   speed             = coalesce(var.azure_cloud_router_connections[count.index].azure_speed, "1Gbps")

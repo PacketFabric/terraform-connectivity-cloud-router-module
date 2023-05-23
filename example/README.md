@@ -49,17 +49,26 @@ terraform plan
 
 **Note:** you can update terraform variables in the ``variables*.tf``.
 
-3. Apply the plan:
+3. **STEP1:** deploy the demo Networks in each Public Clouds:
 
 ```sh
 terraform apply
 ```
 
-4. You can test connectivity between AWS and Google by navigating to `http://<aws_ec2_public_ip_server>:8089/` and simulate traffic between the 2 nginx servers.
+4. **STEP2:** connect each Public Clouds with a PacketFabric Cloud Router:
+
+Edit the `main.tf`, uncommend the `packetfabric_cloud_router` module, then apply the plan:
+
+```sh
+terraform init -upgrade
+terraform plan
+terraform apply
+
+5. You can test connectivity between AWS and Google by navigating to `http://<aws_ec2_public_ip_server>:8089/` and simulate traffic between the 2 nginx servers.
 
 **Note:** Default login/password for Locust is ``demo:packetfabric``. Use Private IP of the consul client nodes.
 
-5. Destroy the rest of the demo infra.
+6. Destroy the rest of the demo infra.
 
 ```sh
 terraform destroy

@@ -21,15 +21,16 @@ variable "aws_pop" {
   description = "PacketFabric AWS pop"
   default     = "WDC2"
 }
-variable "aws_vpc_id" {
+variable "aws_vpc_cidr" {
   type        = string
-  description = "AWS VPC ID"
-  default     = "vpc-bea401c4"
+  description = "CIDR for the VPC in AWS"
+  default     = "10.1.0.0/16"
 }
-variable "aws_subnet_id" {
+# Subnet Variables
+variable "aws_subnet_cidr" {
   type        = string
-  description = "AWS VPC ID"
-  default     = "subnet-01c37ba968f5071a6"
+  description = "CIDR for the subnet in AWS"
+  default     = "10.1.1.0/24" # do not use 172.17.0.1/16, internal network used for docker containers used in the demo VMs
 }
 # Make sure you setup the correct AMI if you chance default AWS region
 variable "ec2_ami" {
@@ -56,20 +57,15 @@ variable "google_zone" {
   description = "Google zone"
   default     = "us-west1-a"
 }
+variable "google_subnet_cidr" {
+  type        = string
+  description = "CIDR for the subnet"
+  default     = "10.2.1.0/24" # do not use 172.17.0.1/16, internal network used for docker containers used in the demo VMs
+}
 variable "google_pop" {
   type        = string
   description = "PacketFabric Google pop"
   default     = "PDX2"
-}
-variable "google_network" {
-  type        = string
-  description = "Google VPC name"
-  default     = "default"
-}
-variable "google_subnetwork" {
-  type        = string
-  description = "Google Subnet name"
-  default     = "default"
 }
 
 ## Azure VARs
@@ -88,15 +84,20 @@ variable "azure_pop" {
   description = "PacketFabric Azure pop"
   default     = "New York"
 }
-variable "azure_vnet" {
+variable "azure_vnet_cidr" {
   type        = string
-  description = "Azure VNet name"
-  default     = "default"
+  description = "CIDR for the VNET"
+  default     = "10.3.0.0/16" # do not use 172.17.0.1/16, internal network used for docker containers used in the demo VMs
 }
-variable "azure_subnet" {
+variable "azure_subnet_cidr" {
   type        = string
-  description = "Azure Subnet name"
-  default     = "default"
+  description = "CIDR for the subnet"
+  default     = "10.3.1.0/24"
+}
+variable "azure_subnet_cidr_gw" {
+  type        = string
+  description = "CIDR for the gateway subnet"
+  default     = "10.3.2.0/24"
 }
 variable "azure_subscription_id" {
   type        = string
