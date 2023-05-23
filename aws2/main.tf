@@ -9,18 +9,9 @@ terraform {
   }
 }
 
-# Limitation Terraform https://github.com/hashicorp/terraform/issues/24476
 provider "aws" {
   region = var.aws_cloud_router_connections != null ? var.aws_cloud_router_connections.aws_region : "us-east-1"
   alias  = "alias2"
-}
-
-# Import AWS Credentials to PacketFabric to provision the cloud side of the connection
-resource "packetfabric_cloud_provider_credential_aws" "aws_creds" {
-  provider    = packetfabric
-  count       = var.module_enabled ? 1 : 0
-  description = "${var.aws_cloud_router_connections.name}-aws"
-  # using env var AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 }
 
 # Get the network prefix from the AWS VPC
@@ -136,11 +127,11 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
           &&
           (
             length(var.google_in_prefixes) == 0 &&
-            length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           &&
           (
             length(var.azure_in_prefixes) == 0 &&
-            length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
             [for prefix in var.google_in_prefixes : prefix.prefix],
@@ -216,11 +207,11 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
           &&
           (
             length(var.google_in_prefixes) == 0 &&
-            length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           &&
           (
             length(var.azure_in_prefixes) == 0 &&
-            length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
             [for prefix in var.google_in_prefixes : prefix.prefix],

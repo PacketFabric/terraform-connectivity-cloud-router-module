@@ -9,7 +9,6 @@ terraform {
   }
 }
 
-# Limitation Terraform https://github.com/hashicorp/terraform/issues/24476
 provider "aws" {
   region = var.aws_cloud_router_connections != null ? var.aws_cloud_router_connections.aws_region : "us-east-1"
   alias  = "alias3"
@@ -128,11 +127,11 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_primary" {
           &&
           (
             length(var.google_in_prefixes) == 0 &&
-            length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           &&
           (
             length(var.azure_in_prefixes) == 0 &&
-            length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
             [for prefix in var.google_in_prefixes : prefix.prefix],
@@ -208,11 +207,11 @@ resource "packetfabric_cloud_router_connection_aws" "crc_aws_secondary" {
           &&
           (
             length(var.google_in_prefixes) == 0 &&
-            length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.google_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           &&
           (
             length(var.azure_in_prefixes) == 0 &&
-            length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
+          length(try(coalesce(var.azure_cloud_router_connections.bgp_prefixes, []), [])) == 0)
           ) ? ["0.0.0.0/0"] : toset(concat(
             [for prefix in var.aws_in_prefixes : prefix.prefix],
             [for prefix in var.google_in_prefixes : prefix.prefix],

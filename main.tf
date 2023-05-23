@@ -45,8 +45,9 @@ module "aws1" {
     try(values(module.aws2.aws_in_prefixes), []),
     try(values(module.aws3.aws_in_prefixes), [])
   )
-  cr_id = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
-  aws_cloud_router_connections = var.aws_cloud_router_connections[0]
+  cr_id                        = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
+  aws_cloud_router_connections = var.aws_cloud_router_connections != null && length(coalesce(var.aws_cloud_router_connections, [])) >= 1 ? var.aws_cloud_router_connections[0] : null
+
 }
 
 module "aws2" {
@@ -59,8 +60,8 @@ module "aws2" {
     try(values(module.aws1.aws_in_prefixes), []),
     try(values(module.aws3.aws_in_prefixes), [])
   )
-  cr_id = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
-  aws_cloud_router_connections = try(var.aws_cloud_router_connections[1], null)
+  cr_id                        = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
+  aws_cloud_router_connections = var.aws_cloud_router_connections != null && length(coalesce(var.aws_cloud_router_connections, [])) >= 2 ? var.aws_cloud_router_connections[1] : null
   aws_creds                    = module.aws1.aws_creds
 }
 
@@ -74,8 +75,8 @@ module "aws3" {
     try(values(module.aws1.aws_in_prefixes), []),
     try(values(module.aws2.aws_in_prefixes), [])
   )
-  cr_id = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
-  aws_cloud_router_connections = try(var.aws_cloud_router_connections[2], null)
+  cr_id                        = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
+  aws_cloud_router_connections = var.aws_cloud_router_connections != null && length(coalesce(var.aws_cloud_router_connections, [])) >= 3 ? var.aws_cloud_router_connections[2] : null
   aws_creds                    = module.aws1.aws_creds
 }
 
@@ -89,7 +90,7 @@ module "google" {
     try(values(module.aws3.aws_in_prefixes), [])
   )
   azure_in_prefixes               = try(module.azure.azure_in_prefixes, [])
-  cr_id = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
+  cr_id                           = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
   google_cloud_router_connections = var.google_cloud_router_connections
 }
 
@@ -103,7 +104,7 @@ module "azure" {
     try(values(module.aws3.aws_in_prefixes), [])
   )
   google_in_prefixes             = try(module.google.google_in_prefixes, [])
-  cr_id = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
+  cr_id                          = var.cr_id != null ? var.cr_id : packetfabric_cloud_router.cr[0].id
   cr_asn                         = var.asn
   azure_cloud_router_connections = var.azure_cloud_router_connections
 }

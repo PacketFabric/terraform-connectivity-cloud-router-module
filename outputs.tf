@@ -1,5 +1,5 @@
 output "cloud_router_circuit_id" {
-  value = length(packetfabric_cloud_router.cr) > 0 ? packetfabric_cloud_router.cr[0].id : null
+  value       = length(packetfabric_cloud_router.cr) > 0 ? packetfabric_cloud_router.cr[0].id : null
   description = "PacketFabric Cloud Router Circuit ID"
 }
 
