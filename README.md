@@ -107,7 +107,7 @@ PS C:\> $Env:PF_ACCOUNT_ID="123456789"
 
 ## Example
 
-### Example Cloud Router AWS/Google/Azure usage with single connections (1Gbps)
+### Cloud Router AWS/Google/Azure with single connections (1Gbps)
 
 ```hcl
 module "packetfabric" {
@@ -124,70 +124,32 @@ module "packetfabric" {
       google_region  = "us-west1"
       google_network = "myvpc"
       google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
-    }
-  ]
-  # PacketFabric Cloud Router Connection to AWS
-  aws_cloud_router_connections = [
-    {
-      name       = "my-aws-connection"
-      labels     = ["dev"]
-      aws_region = "us-east-1"
-      aws_vpc_id = "vpc-bea401c4"
-      aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
-    }
-  ]
-  # PacketFabric Cloud Router Connection to Azure
-  azure_cloud_router_connections = [
-    {
-      name                  = "my-azure-connection"
-      labels                = ["dev"]
-      azure_region          = "North Central US"
-      azure_resource_group  = "MyResourceGroup"
-      azure_vnet            = "MyVnet"
-      azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
-      azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
-    }
-  ]
-}
-```
-
-### Example Cloud Router AWS/Google/Azure usage with single connections specifying the speed
-
-```hcl
-module "packetfabric" {
-  source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.3.0"
-  name    = "demo-standalone2"
-  labels  = ["terraform", "dev"]
-  # PacketFabric Cloud Router
-  asn      = 4556
-  capacity = "10Gbps"
-  # PacketFabric Cloud Router Connection to Google
-  google_cloud_router_connections = [
+    },
     {
       name           = "my-google-connection"
+      labels         = ["dev"]
       google_project = "prefab-setting-357415"
-      google_region  = "us-west1"
+      google_region  = "us-east"
       google_network = "myvpc"
-      google_pop     = "PDX2" # https://packetfabric.com/locations/cloud-on-ramps
-      google_speed   = "2Gbps"
+      google_pop     = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
+      google_asn     = 64518
     }
   ]
   # PacketFabric Cloud Router Connection to AWS
   aws_cloud_router_connections = [
     {
       name       = "my-aws-connection1"
+      labels     = ["dev"]
       aws_region = "us-east-1"
       aws_vpc_id = "vpc-bea401c4"
       aws_pop    = "NYC1" # https://packetfabric.com/locations/cloud-on-ramps
-      aws_speed  = "2Gbps"
     },
     {
       name       = "my-aws-connection2"
+      labels     = ["dev"]
       aws_region = "us-west-1"
-      aws_vpc_id = "vpc-a2a546a7"
-      aws_pop    = "LAX1" # https://packetfabric.com/locations/cloud-on-ramps
-      aws_speed  = "2Gbps"
+      aws_vpc_id = "vpc-6ae390b8"
+      aws_pop    = "SFO6" # https://packetfabric.com/locations/cloud-on-ramps
       aws_asn1   = 64514
       aws_asn2   = 64515
     }
@@ -202,13 +164,12 @@ module "packetfabric" {
       azure_vnet            = "MyVnet"
       azure_pop             = "Chicago" # https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers
       azure_subscription_id = "00000000-0000-0000-0000-000000000000" # same as env var ARM_SUBSCRIPTION_ID
-      azure_speed           = "2Gbps"
     }
   ]
 }
 ```
 
-### Example Cloud Router AWS/Google/Azure usage with redundant connections
+### Cloud Router AWS/Google/Azure with redundant connections (2Gbps) and additional BGP prefixes
 
 ```hcl
 module "packetfabric" {
@@ -226,7 +187,6 @@ module "packetfabric" {
       google_project = "prefab-setting-357415"
       google_region  = "us-west1"
       google_network = "default"
-      google_asn     = 16550
       google_pop     = "SFO1" # https://packetfabric.com/locations/cloud-on-ramps
       google_speed   = "1Gbps"
       redundant      = true
@@ -244,8 +204,6 @@ module "packetfabric" {
       name       = "my-aws-connection"
       aws_region = "us-east-1"
       aws_vpc_id = "vpc-bea401c4"
-      aws_asn1   = 64512
-      aws_asn2   = 64513
       aws_pop    = "WDC1" # https://packetfabric.com/locations/cloud-on-ramps
       aws_speed  = "2Gbps"
       redundant  = true
