@@ -1,3 +1,9 @@
+## 0.3.1  (May 25, 2023)
+
+IMPROVEMENTS/ENHANCEMENTS:
+
+* Remove module_variable_optional_attrs experiments and bump terraform minimum version to 1.3 (#7)
+
 ## 0.3.0  (May 25, 2023)
 
 BREAKING CHANGES:

@@ -18,8 +18,9 @@ If you would like to see support for other cloud service providers (e.g. Azure, 
 
 | Ecosystem | Version |
 |-----------|---------|
-| [terraform](https://www.terraform.io) | ">= 1.1.0, < 1.3.0" |
-<!-- | [terraform](https://www.terraform.io) | ">= 1.3.0" | -->
+| [terraform](https://www.terraform.io) | ">= 1.3.0" |
+<!-- | [terraform](https://www.terraform.io) | ">= 1.1.0, < 1.3.0" | -->
+
 
 ### Terraform Providers
 
@@ -61,11 +62,11 @@ az feature register --namespace Microsoft.Network --name AllowExpressRoutePorts
 az provider register -n Microsoft.Network
 ```
 
-:warning: **Subnet Overlap Between Cloud Providers**
+**Warning**:  **Subnet Overlap Between Cloud Providers**
 
 When using multiple cloud providers, be cautious of potential subnet overlap. Subnet overlap occurs when conflicting IP address ranges are used in different cloud networks.
 
-:warning: **Azure Gateway subnet**
+**Warning**:  **Azure Gateway subnet**
 
 Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).
 
@@ -259,7 +260,7 @@ module "packetfabric" {
 - `name` must follow `^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$`
   - Any lowercase ASCII letter or digit, and possibly hyphen, which should start with a letter and end with a letter or digit, and have at most 63 characters (1 for the starting letter + up to 61 characters in the middle + 1 for the ending letter/digit).
 
-:warning: **AWS and Azure Cloud Router Connection Creation Time**
+**Warning**:  **AWS and Azure Cloud Router Connection Creation Time**
 
 Please be aware that creating AWS or Azure Cloud Router connections can take up to 30-60 minutes due to the gateway association operation on the CSP side.
 
@@ -272,7 +273,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | name                      | Yes      | | The name of the PacketFabric Cloud Router Connection and other resources created in AWS |
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | aws_region | Yes | | The AWS region |
-| aws_vpc_id | Yes | | The AWS VPC ID<br/>:warning: **must be in the region defined above and makes sure your VPC is not already attached to an existing Virtual Private Gateway**|
+| aws_vpc_id | Yes | | The AWS VPC ID<br/>**Warning**:  **must be in the region defined above and makes sure your VPC is not already attached to an existing Virtual Private Gateway**|
 | aws_asn1 | No | 64512 | The AWS ASN of the Direct Connect Gateway (must update to private ASN - 64514 to 64517 - if more than 1 AWS Connection) |
 | aws_asn2 | No | 64513 | The AWS ASN of the Private Gateway (must update to private ASN - 64514 to 64517 - if more than 1 AWAS Connection) |
 | aws_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
@@ -291,7 +292,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router |
 | google_project | Yes | | The Google Cloud project ID |
 | google_region | Yes | | The Google Cloud region |
-| google_network | Yes | | The Google Cloud VPC network name<br/>:warning: **must be in the region defined above**|
+| google_network | Yes | | The Google Cloud VPC network name<br/>**Warning**:  **must be in the region defined above**|
 | google_asn | No | 16550 | The Google Cloud ASN (must update to private ASN - 64518 to 64520 - if more than 1 Google Connection) |
 | google_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection |
 | google_speed | No | 1Gbps | The connection speed |
@@ -309,7 +310,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | labels                    | No       | terraform | If not specified, default to the same labels assigned to the PacketFabric Cloud Router | |
 | azure_resource_group | Yes | | The Azure Resource group |
 | azure_region | Yes | | The Azure Cloud region |
-| azure_vnet | Yes | | The Azure Cloud VNet name<br/>:warning: **must be in the region defined above**|
+| azure_vnet | Yes | | The Azure Cloud VNet name<br/>**Warning**:  **must be in the region defined above**|
 | azure_asn |  | 12076 | The Azure Cloud ASN (cannot be changed) |
 | azure_pop | Yes | | The [PacketFabric Point of Presence](https://packetfabric.com/locations/cloud-on-ramps) for the connection is defined on the Azure side [Search for PacketFabric](https://docs.microsoft.com/en-us/azure/expressroute/expressroute-locations-providers) |
 | azure_speed | No | 1Gbps | The connection speed |
@@ -319,7 +320,7 @@ Please be aware that creating AWS or Azure Cloud Router connections can take up 
 | bgp_prefixes | No | VPC network subnets | List of supplementary [BGP](https://docs.packetfabric.com/cr/bgp/reference/) prefixes - must already exist as established routes in the routing table associated with the VPC |
 | bgp_prefixes_match_type | No | exact | The BGP prefixes match type exact or orlonger for all the prefixes |
 
-:warning: **Azure Gateway subnet**
+**Warning**:  **Azure Gateway subnet**
 
 Please ensure that the Virtual Network (VNet) you choose is equipped with a Gateway subnet. This is a critical requirement for setting up a successful connection. For more information, refer to [Microsoft Learn](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-about-virtual-network-gateways#gwsub).
 
