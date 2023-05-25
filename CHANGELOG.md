@@ -1,3 +1,17 @@
+## 0.3.0  (May 25, 2023)
+
+BREAKING CHANGES:
+
+* Remove Total price MRC (monthly recurring cost) for the Cloud Router and all Cloud Router Connections (#6)
+
+FEATURES:
+
+* Adding Azure standalone or redundant Cloud Router Connection support (#6)
+* Adding name and labels attributes to individual Cloud Router Conections (#6)
+* Adding support of multiple Google and AWS Cloud Router Connections (#6)
+* Adding option to specify an existing PacketFabric Cloud Router (#6)
+* Add module_variable_optional_attrs experiments and update terraform supported version to >= 1.1.0, < 1.3.0 for CTS module support (#6)
+
 ## 0.2.1  (May 8, 2023)
 
 IMPROVEMENTS/ENHANCEMENTS:
