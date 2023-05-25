@@ -112,7 +112,7 @@ PS C:\> $Env:PF_ACCOUNT_ID="123456789"
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.3.0"
+  version = "0.3.1"
   name    = "demo-standalone1"
   labels  = ["terraform", "dev"]
   # PacketFabric Cloud Router Connection to Google
@@ -174,7 +174,7 @@ module "packetfabric" {
 ```hcl
 module "packetfabric" {
   source  = "packetfabric/cloud-router-module/connectivity"
-  version = "0.3.0"
+  version = "0.3.1"
   name    = "demo-redundant"
   labels  = ["terraform", "prod"]
   # PacketFabric Cloud Router
