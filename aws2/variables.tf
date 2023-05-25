@@ -1,4 +1,3 @@
-variable "name" {}
 variable "labels" {}
 variable "cr_id" {}
 
@@ -18,9 +17,14 @@ variable "google_in_prefixes" {
 variable "azure_in_prefixes" {
   default = []
 }
+variable "aws_in_prefixes" {
+  default = []
+}
 
 variable "module_enabled" {
   description = "Whether the module resources should be created (true) or not (false)"
   type        = bool
   default     = true
 }
+
+variable "aws_creds" {}

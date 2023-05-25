@@ -1,0 +1,37 @@
+terraform {
+  required_providers {
+    packetfabric = {
+      source  = "PacketFabric/packetfabric"
+      version = ">= 1.6.0"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 4.56.0"
+    }
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.58.0"
+    }
+  }
+}
+
+provider "packetfabric" {}
+
+provider "aws" {
+  region = var.aws_region
+  # use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables
+}
+
+# Make sure you enabled Compute Engine API
+provider "google" {
+  project = var.gcp_project_id
+  # use GOOGLE_CREDENTIALS environment variable
+}
+
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+}
